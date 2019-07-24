@@ -4,7 +4,7 @@
 import Vue from 'vue';
 import './plugins/vuetify'
 import './plugins/vuex'
-import "reflect-metadata";
+import 'reflect-metadata';
 import App from './renderer/App.vue';
 
 Vue.config.productionTip = false;

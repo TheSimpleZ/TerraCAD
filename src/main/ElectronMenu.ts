@@ -5,10 +5,10 @@ export default class ElectronMenu {
     isMac = process.platform === 'darwin'
 
     openFolder() {
-        const folderName = dialog.showOpenDialog(this.win, { properties: ["openDirectory"] })
+        const folderName = dialog.showOpenDialog(this.win, { properties: ['openDirectory'] })
 
         if (folderName)
-            this.win.webContents.send("folder-opened", folderName[0])
+            this.win.webContents.send('folder-opened', folderName[0])
     }
 
     template: object[] = [
@@ -31,7 +31,7 @@ export default class ElectronMenu {
         {
             label: 'File',
             submenu: [
-                { label: "Open folder", click: () => { this.openFolder() }, accelerator: "CommandOrControl+O" },
+                { label: 'Open folder', click: () => { this.openFolder() }, accelerator: 'CommandOrControl+O' },
                 this.isMac ? { role: 'close' } : { role: 'quit' }
             ]
         },

@@ -1,7 +1,7 @@
 'use strict'
 
 import { app, protocol, BrowserWindow, Menu } from 'electron'
-import ElectronMenu from "./main/ElectronMenu"
+import ElectronMenu from './main/ElectronMenu'
 import {
   createProtocol,
   installVueDevtools

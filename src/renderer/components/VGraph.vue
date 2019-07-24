@@ -1,18 +1,30 @@
 <template lang="pug">
-  svg(
-    xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink= "http://www.w3.org/1999/xlink"
-    ref="svg"
-    class="net-svg"
-    pointer-events="all"
+v-layout(
+  fill-height
+  column
+)
+  v-flex(
+    shrink
+  )
+    v-breadcrumbs(
+      dark
+      :items="breadCrumbItems" 
+      divider=">"
     )
-    g(:transform="transform")
-      //-> links
-      g.links#l-links(ref="linksGroup")
-      //- -> nodes
-      g.nodes#l-nodes(ref="nodesGroup")
-      //- -> Node Labels
-      g.labels#node-labels(ref="labelsGroup")
+  v-flex
+    svg.svg(
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink= "http://www.w3.org/1999/xlink"
+      ref="svg"
+      pointer-events="all"
+      )
+      g(:transform="transform")
+        //-> links
+        g.links#l-links(ref="linksGroup")
+        //- -> nodes
+        g.nodes#l-nodes(ref="nodesGroup")
+        //- -> Node Labels
+        g.labels#node-labels(ref="labelsGroup")
 </template>
 
 <script lang="ts">
@@ -23,18 +35,21 @@ import * as d3zoom from "d3-zoom";
 import * as d3force from "d3-force";
 import * as d3transition from "d3-transition";
 import { vxm } from "../store";
-import { INode, ILink } from "../store/graph";
 const getD3Event = () => d3select.event;
 
-export interface Forces {
-  X: boolean | number;
-  Y: boolean | number;
-  ManyBody: number;
-  Link: boolean;
-  Collide: boolean;
+export interface INode {
+  id: string;
+  name: string;
+  radius: number;
+  visible: boolean;
 }
 
-class Node implements INode, d3force.SimulationNodeDatum {
+export interface ILink {
+  source_id: string;
+  target_id: string;
+}
+
+export class Node implements INode, d3force.SimulationNodeDatum {
   constructor(
     public id: string,
     public name: string,
@@ -42,7 +57,7 @@ class Node implements INode, d3force.SimulationNodeDatum {
     public y: number = 0,
     public radius: number = 10,
     public visible: boolean = true,
-    public selected: boolean = false,
+    public expanded: boolean = false,
     public fx?: number,
     public fy?: number
   ) {}
@@ -52,7 +67,7 @@ class Link implements d3force.SimulationLinkDatum<Node> {
   constructor(
     public source: Node,
     public target: Node,
-    public index?: number
+    public index?: number | undefined
   ) {}
 }
 
@@ -67,20 +82,12 @@ export default class VGraph extends Vue {
   @Ref() readonly nodesGroup!: SVGGElement;
   @Ref() readonly labelsGroup!: SVGGElement;
 
-  get nodes(): Node[] {
-    return vxm.graph.nodes;
-  }
-
-  set nodes(val) {
-    vxm.graph.newNodes(val);
-  }
-
-  get links(): Link[] {
-    return vxm.graph.links;
-  }
+  nodes: Node[] = [];
+  links: Link[] = [];
 
   simulation: d3force.Simulation<Node, Link> | null = null;
   transform = d3zoom.zoomIdentity;
+  breadCrumbItems: { text: string; disabled?: boolean; href?: string }[] = [];
 
   // Config
   repellantStrength = -120;
@@ -110,11 +117,11 @@ export default class VGraph extends Vue {
   mounted() {
     const svgSelect = d3select
       .select(this.svg)
-      .call(
+      .call(<any>(
         d3zoom
           .zoom<SVGElement, {}>()
           .on("zoom", () => (this.transform = getD3Event().transform))
-      )
+      ))
       .on("dblclick.zoom", null);
   }
 
@@ -131,19 +138,47 @@ export default class VGraph extends Vue {
 
   @Watch("inputNodes", { deep: true })
   buildNodes(newNodes: INode[]) {
-    vxm.graph.newNodes(
-      newNodes.map(n => {
-        n.x = this.center.x;
-        n.y = this.center.y;
-        return n;
-      })
-    );
+    this.nodes = newNodes.map((netNode: INode, index: number) => {
+      const nodeId = !netNode.id ? index.toString() : netNode.id;
+      const nodeName =
+        !netNode.name && netNode.name !== "0" ? `node ${nodeId}` : netNode.name;
+
+      const newNode = new Node(
+        nodeId,
+        nodeName,
+        this.center.x,
+        this.center.y,
+        netNode.radius,
+        netNode.visible
+      );
+
+      // Check if node already exists and assign current
+      const oldNode = this.nodes.find(n => n.id == nodeId);
+      if (oldNode) {
+        newNode.x = oldNode.x;
+        newNode.y = oldNode.y;
+        newNode.fx = oldNode.fx;
+        newNode.fy = oldNode.fy;
+      }
+
+      return newNode;
+    });
   }
 
   @Watch("inputLinks")
   @Watch("visibleNodes")
   buildLinks() {
-    vxm.graph.newLinks(this.inputLinks);
+    this.links = this.inputLinks
+      .filter(
+        link =>
+          this.visibleNodes.some(n => n.id == link.source_id) &&
+          this.visibleNodes.some(n => n.id == link.target_id)
+      )
+      .map((link: ILink, index: number) => {
+        const sourceNode = this.visibleNodes.find(n => n.id == link.source_id)!;
+        const targetNode = this.visibleNodes.find(n => n.id == link.target_id)!;
+        return new Link(sourceNode, targetNode);
+      });
   }
 
   @Watch("visibleNodes", { deep: true })
@@ -255,6 +290,43 @@ export default class VGraph extends Vue {
     );
   }
 
+  // Make store value watchable
+  get selectedNode() {
+    return vxm.graph.selectedNode;
+  }
+
+  @Watch("selectedNode", { immediate: true })
+  buildBreadCrumb(newSelection: Node) {
+    if (!newSelection) {
+      this.breadCrumbItems = [];
+      return;
+    }
+
+    this.breadCrumbItems = this.getParentTree(newSelection)
+      .map(n => {
+        return { text: n.name };
+      })
+      .reverse()
+      .concat([{ text: newSelection.name }]);
+  }
+
+  getParentTree(node: Node): Node[] {
+    const parents = [];
+    let _node = node;
+    let parent: Node | undefined;
+    while ((parent = this.getParentNode(_node))) {
+      parents.push(parent);
+      _node = parent;
+    }
+    return parents;
+  }
+
+  getParentNode(node: Node): Node | undefined {
+    return this.nodes.find(n =>
+      this.inputLinks.some(l => l.source_id == n.id && l.target_id == node.id)
+    );
+  }
+
   expandNode(node: Node) {
     this.getNodeChildren(node).forEach(n => (n.visible = true));
   }
@@ -267,18 +339,24 @@ export default class VGraph extends Vue {
   nodeClicked(node: Node) {
     this.$emit("node-click", getD3Event(), node);
 
-    if (!node.selected) {
-      node.selected = true;
+    if (!node.expanded) {
+      node.expanded = true;
       this.expandNode(node);
     } else {
       this.getNodeChildren(node).forEach(this.collapseNode);
-      node.selected = false;
+      node.expanded = false;
     }
+
+    vxm.graph.newSelection({
+      id: node.id,
+      name: node.name
+    });
   }
 
   nodeClass(node: Node): string {
     let cssClass = ["node"];
-    if (node.selected) cssClass.push("selected");
+    if (this.selectedNode && node.id == this.selectedNode.id)
+      cssClass.push("selected");
     if (node.fx || node.fy) cssClass.push("pinned");
     return cssClass.join(" ");
   }
@@ -309,7 +387,12 @@ export default class VGraph extends Vue {
 <style lang="stylus">
 @import '../lib/styl/vars.styl';
 
-.net-svg {
+.wrapper {
+  height: 100%;
+  width: 100%;
+}
+
+.svg {
   height: 100%;
   width: 100%;
   cursor: pointer;

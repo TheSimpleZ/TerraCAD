@@ -1,0 +1,7 @@
+{
+    "typescript.experimental.useSeparateSyntaxServer": true,
+    "typescript.implementationsCodeLens.enabled": true,
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.referencesCodeLens.enabled": true,
+    "typescript.suggest.completeFunctionCalls": true
+}
