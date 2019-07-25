@@ -32,19 +32,8 @@ import * as d3zoom from 'd3-zoom'
 import * as d3force from 'd3-force'
 import * as d3transition from 'd3-transition'
 import { vxm } from '../store'
+import { INode, ILink } from '../store/graph'
 const getD3Event = () => d3select.event
-
-export interface INode {
-  id: string
-  name: string
-  radius: number
-  visible: boolean
-}
-
-export interface ILink {
-  sourceId: string
-  targetId: string
-}
 
 export class Node implements INode, d3force.SimulationNodeDatum {
   constructor(
@@ -55,6 +44,7 @@ export class Node implements INode, d3force.SimulationNodeDatum {
     public radius: number = 10,
     public visible: boolean = true,
     public expanded: boolean = false,
+    public selected: boolean = false,
     public fx?: number,
     public fy?: number,
   ) {}
@@ -70,8 +60,12 @@ class Link implements d3force.SimulationLinkDatum<Node> {
 
 @Component
 export default class VGraph extends Vue {
-  @Prop() readonly inputNodes!: INode[]
-  @Prop() readonly inputLinks!: ILink[]
+  get inputNodes(): INode[] {
+    return vxm.graph.nodes
+  }
+  get inputLinks(): ILink[] {
+    return vxm.graph.links
+  }
   @Prop({ default: true }) readonly nodeLabels!: boolean
 
   @Ref() readonly svg!: SVGElement
@@ -150,6 +144,7 @@ export default class VGraph extends Vue {
         this.center.y,
         netNode.radius,
         netNode.visible,
+        netNode.expanded,
       )
 
       // Check if node already exists and assign current
@@ -322,39 +317,21 @@ export default class VGraph extends Vue {
     )
   }
 
-  expandNode(node: Node) {
-    this.getNodeChildren(node).forEach(n => (n.visible = true))
-  }
-
-  collapseNode(node: Node) {
-    this.getNodeChildren(node).forEach(this.collapseNode)
-    node.visible = false
-  }
-
-  nodeClicked(node: Node) {
+  async nodeClicked(node: Node) {
     this.$emit('node-click', getD3Event(), node)
 
     if (!node.expanded) {
-      node.expanded = true
-      this.expandNode(node)
-      this.selectNode(node)
+      await vxm.graph.toggleExpand(node)
+      await vxm.graph.selectNode(node)
     } else if (this.isSelected(node)) {
-      this.getNodeChildren(node).forEach(this.collapseNode)
-      node.expanded = false
+      await vxm.graph.toggleExpand(node)
     } else {
-      this.selectNode(node)
+      await vxm.graph.selectNode(node)
     }
   }
 
-  selectNode(node: Node) {
-    vxm.graph.newSelection({
-      id: node.id,
-      name: node.name,
-    })
-  }
-
   isSelected(node: Node) {
-    return this.selectedNode && this.selectedNode.id === node.id
+    return vxm.graph.selectedNode && vxm.graph.selectedNode.id === node.id
   }
 
   nodeClass(node: Node): string {

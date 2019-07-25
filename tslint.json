@@ -8,7 +8,7 @@
     "quotemark": [true, "single"],
     "indent": [true, "spaces", 2],
     "interface-name": false,
-    "ordered-imports": true,
+    "ordered-imports": false,
     "object-literal-sort-keys": false,
     "no-consecutive-blank-lines": false,
     "no-console": false,
@@ -17,6 +17,7 @@
     "member-access": false,
     "max-classes-per-file": false,
     "no-conditional-assignment": false,
-    "arrow-parens": false
+    "arrow-parens": false,
+    "trailing-comma": false
   }
 }
