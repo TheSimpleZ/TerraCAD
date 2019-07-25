@@ -59,9 +59,6 @@ class Link implements d3force.SimulationLinkDatum<Node> {
 
 @Component
 export default class VGraph extends Vue {
-  get inputNodes(): INode[] {
-    return vxm.graph.nodes
-  }
   get inputLinks(): ILink[] {
     return vxm.graph.links
   }
@@ -126,10 +123,10 @@ export default class VGraph extends Vue {
   }
 
   get visibleNodes() {
-    return this.nodes.filter(n => n.visible)
+    return vxm.graph.visibleNodes
   }
 
-  @Watch('inputNodes', { deep: true })
+  @Watch('visibleNodes', { deep: true })
   buildNodes(newNodes: INode[]) {
     this.nodes = newNodes.map((netNode: INode, index: number) => {
       const nodeId = !netNode.id ? index.toString() : netNode.id
@@ -160,26 +157,30 @@ export default class VGraph extends Vue {
   }
 
   @Watch('inputLinks')
-  @Watch('visibleNodes')
+  @Watch('nodes')
   buildLinks() {
     this.links = this.inputLinks
       .filter(
         link =>
-          this.visibleNodes.some(n => n.id === link.sourceId) &&
-          this.visibleNodes.some(n => n.id === link.targetId),
+          this.nodes.some(n => n.id === link.sourceId) &&
+          this.nodes.some(n => n.id === link.targetId),
       )
       .map((link: ILink, index: number) => {
-        const sourceNode = this.visibleNodes.find(n => n.id === link.sourceId)!
-        const targetNode = this.visibleNodes.find(n => n.id === link.targetId)!
+        const sourceNode = this.nodes.find(n => n.id === link.sourceId)!
+        const targetNode = this.nodes.find(n => n.id === link.targetId)!
         return new Link(sourceNode, targetNode)
       })
   }
 
-  @Watch('visibleNodes')
+  @Watch('nodes')
   @Watch('links')
   updateSimulation() {
     if (this.simulation) {
-      this.simulation.nodes(this.visibleNodes)
+      if (!this.simulation.nodes().length) {
+        this.simulation.alpha(1).restart()
+      }
+
+      this.simulation.nodes(this.nodes)
       if (this.links && this.links.length) {
         this.simulation
           .force<d3force.ForceLink<Node, Link>>('link')!
@@ -220,7 +221,7 @@ export default class VGraph extends Vue {
     d3select
       .select(this.nodesGroup)
       .selectAll('circle')
-      .data(this.visibleNodes, n => (n as Node).id)
+      .data(this.nodes, n => (n as Node).id)
       .join(
         enter => {
           const e = enter
@@ -265,7 +266,7 @@ export default class VGraph extends Vue {
     d3select
       .select(this.labelsGroup)
       .selectAll('text')
-      .data(this.visibleNodes)
+      .data(this.nodes)
       .join(
         enter => updateLabel(enter.append('text').attr('class', 'node-label')),
         updateLabel,
@@ -278,15 +279,21 @@ export default class VGraph extends Vue {
     return vxm.graph.selectedNode
   }
 
+  // Make store value watchable
+  get openFolder() {
+    return vxm.graph.openFolder
+  }
+
   @Watch('selectedNode')
+  @Watch('openFolder')
   buildBreadCrumb(newSelection: Node) {
     if (!newSelection) {
       return
     }
     const prefix = []
     const suffix = [{ text: newSelection.name }]
-    if (vxm.graph.openFolder) {
-      prefix.push({ text: vxm.graph.openFolder })
+    if (this.openFolder) {
+      prefix.push({ text: this.openFolder })
     }
     if (!newSelection) {
       this.breadCrumbItems = prefix

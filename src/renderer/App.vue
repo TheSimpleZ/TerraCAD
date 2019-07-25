@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer clipped fixed v-model="drawer" app>
+    <v-navigation-drawer clipped fixed app>
       <v-list dense>
         <v-list-tile>
           <v-list-tile-action>
@@ -12,28 +12,33 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar app fixed clipped-left>
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-      <v-toolbar-title>TerraCAD</v-toolbar-title>
-    </v-toolbar>
 
     <v-content>
-      <TerraGraph />
+      <v-container fill-height fluid>
+        <v-graph />
+      </v-container>
     </v-content>
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import TerraGraph from './components/TerraGraph.vue'
+import VGraph from './components/VGraph.vue'
+import { vxm } from './store'
 
 @Component({
   components: {
-    TerraGraph,
+    VGraph,
   },
 })
 export default class App extends Vue {
   drawer = false
+
+  async mounted() {
+    await vxm.graph.importTerraformFolder(
+      '/home/zrean/Documents/TerraCAD/infra',
+    )
+  }
 }
 </script>
 

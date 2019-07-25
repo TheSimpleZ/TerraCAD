@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, Menu, shell } from 'electron'
-import { vxm } from '../renderer/store'
+import { store, vxm } from '../renderer/store'
 
 export default class ElectronMenu {
   win: BrowserWindow

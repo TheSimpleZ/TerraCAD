@@ -53,9 +53,13 @@ export class TerraGraphStore extends VuexModule {
     return this.nodes.find(n => n.selected)
   }
 
+  get visibleNodes() {
+    return this.nodes.filter(n => n.visible)
+  }
+
   nodes: Node[] = []
   parsedHcl: Hcl = {}
-  openFolder?: string
+  openFolder?: string = ''
 
   @Mutation
   setSelected({ node, selected }: { node: INode; selected: boolean }) {
@@ -91,9 +95,8 @@ export class TerraGraphStore extends VuexModule {
           return hcl.parse(await fsPromises.readFile(filepath, 'utf-8'))
         }),
     )
-
     this.parsedHcl = fileDatas.reduce(merge, {})
-    this.generateNodes()
+    this.nodes = this.generateNodes(this.parsedHcl)
     this.openFolder = dirPath.split('/').pop()
   }
 
@@ -142,19 +145,21 @@ export class TerraGraphStore extends VuexModule {
     )
   }
 
-  private generateNodes() {
+  private generateNodes(hclData: Hcl) {
     const initialDepth = 3
     const generateNodesRecurse = (
       hclObj: Hcl,
       parentId?: string,
-      nodes: Node[] = [],
+
       depth = initialDepth,
     ): Node[] => {
+      let nodes: Node[] = []
       if (depth === 0) {
         return nodes
       } else {
         depth--
       }
+
       for (const key of Object.keys(hclObj)) {
         const id = uuidv4()
         const value: any = hclObj[key]
@@ -169,11 +174,13 @@ export class TerraGraphStore extends VuexModule {
           node.props = value
         }
 
-        nodes.concat([node, ...generateNodesRecurse(value, id, nodes, depth)])
+        nodes.push(node)
+
+        nodes = nodes.concat(generateNodesRecurse(value, id, depth))
       }
       return nodes
     }
 
-    this.nodes = generateNodesRecurse(this.parsedHcl)
+    return generateNodesRecurse(hclData)
   }
 }
