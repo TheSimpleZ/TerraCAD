@@ -42,8 +42,8 @@ export interface INode {
 }
 
 export interface ILink {
-  source_id: string
-  target_id: string
+  sourceId: string
+  targetId: string
 }
 
 export class Node implements INode, d3force.SimulationNodeDatum {
@@ -113,6 +113,7 @@ export default class VGraph extends Vue {
           .distance(link => link.source.radius * this.linkDistance)
           .strength(this.linkPullingForce),
       )
+      .on('tick', () => this.drawGarph())
   }
 
   mounted() {
@@ -170,25 +171,19 @@ export default class VGraph extends Vue {
     this.links = this.inputLinks
       .filter(
         link =>
-          this.visibleNodes.some(n => n.id === link.source_id) &&
-          this.visibleNodes.some(n => n.id === link.target_id),
+          this.visibleNodes.some(n => n.id === link.sourceId) &&
+          this.visibleNodes.some(n => n.id === link.targetId),
       )
       .map((link: ILink, index: number) => {
-        const sourceNode = this.visibleNodes.find(n => n.id === link.source_id)!
-        const targetNode = this.visibleNodes.find(n => n.id === link.target_id)!
+        const sourceNode = this.visibleNodes.find(n => n.id === link.sourceId)!
+        const targetNode = this.visibleNodes.find(n => n.id === link.targetId)!
         return new Link(sourceNode, targetNode)
       })
   }
 
-  @Watch('visibleNodes', { deep: true })
-  @Watch('links', { deep: true })
-  drawGarph() {
-    this.drawNodes()
-    if (this.nodeLabels) {
-      this.drawLabels()
-    }
-    this.drawLinks()
-
+  @Watch('visibleNodes')
+  @Watch('links')
+  updateSimulation() {
     if (this.simulation) {
       this.simulation.nodes(this.visibleNodes)
       if (this.links && this.links.length) {
@@ -199,25 +194,30 @@ export default class VGraph extends Vue {
     }
   }
 
+  drawGarph() {
+    this.drawNodes()
+    if (this.nodeLabels) {
+      this.drawLabels()
+    }
+    this.drawLinks()
+  }
+
   drawLinks() {
     function updatePos(e: any) {
-      return e
-        .attr('x1', (link: any) => link.source.x)
-        .attr('y1', (link: any) => link.source.y)
-        .attr('x2', (link: any) => link.target.x)
-        .attr('y2', (link: any) => link.target.y)
+      return
     }
     d3select
       .select(this.linksGroup)
       .selectAll('line')
       .data(this.links)
       .join(
-        enter => {
-          const e = enter.append('line').attr('stroke', 'white')
-          updatePos(e.transition())
-          return e
-        },
-        updatePos,
+        enter => enter.append('line').attr('stroke', 'white'),
+        update =>
+          update
+            .attr('x1', (link: any) => link.source.x)
+            .attr('y1', (link: any) => link.source.y)
+            .attr('x2', (link: any) => link.target.x)
+            .attr('y2', (link: any) => link.target.y),
         exit => exit.remove(),
       )
   }
@@ -232,6 +232,8 @@ export default class VGraph extends Vue {
           const e = enter
             .append('circle')
             .attr('class', this.nodeClass)
+            .attr('cx', node => node.x)
+            .attr('cy', node => node.y)
             .call(
               d3drag
                 .drag<SVGCircleElement, Node>()
@@ -241,10 +243,7 @@ export default class VGraph extends Vue {
             )
             .on('click', this.nodeClicked)
 
-          e.transition()
-            .attr('cx', node => node.x)
-            .attr('cy', node => node.y)
-            .attr('r', node => node.radius)
+          e.transition().attr('r', node => node.radius)
 
           return e
         },
@@ -282,9 +281,7 @@ export default class VGraph extends Vue {
 
   getNodeChildren(node: Node) {
     return this.nodes.filter(n =>
-      this.inputLinks.some(
-        l => l.source_id === node.id && l.target_id === n.id,
-      ),
+      this.inputLinks.some(l => l.sourceId === node.id && l.targetId === n.id),
     )
   }
 
@@ -321,9 +318,7 @@ export default class VGraph extends Vue {
 
   getParentNode(node: Node): Node | undefined {
     return this.nodes.find(n =>
-      this.inputLinks.some(
-        l => l.source_id === n.id && l.target_id === node.id,
-      ),
+      this.inputLinks.some(l => l.sourceId === n.id && l.targetId === node.id),
     )
   }
 
