@@ -15,9 +15,9 @@ import { vxm } from '../store'
 })
 export default class TerraGraph extends Vue {
   async mounted() {
-    await vxm.graph.importTerraformFolder(
-      '/home/zrean/Documents/TerraCAD/infra',
-    )
+    // await vxm.graph.importTerraformFolder(
+    //   '/home/zrean/Documents/TerraCAD/infra',
+    // )
   }
 }
 </script>

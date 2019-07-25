@@ -24,11 +24,12 @@ class Node implements INode {
   constructor(
     public name: string,
     public id: string = uuidv4(),
-    public parentId: string | null,
+    public parentId?: string,
     public radius: number = 20,
     public visible: boolean = false,
     public selected: boolean = false,
     public expanded: boolean = false,
+    public props?: object,
   ) {}
 }
 
@@ -44,7 +45,7 @@ interface Hcl {
 export class TerraGraphStore extends VuexModule {
   get links(): Link[] {
     return this.nodes
-      .filter(n => n.parentId != null)
+      .filter(n => n.parentId)
       .map(n => new Link(n.parentId!, n.id))
   }
 
@@ -54,6 +55,7 @@ export class TerraGraphStore extends VuexModule {
 
   nodes: Node[] = []
   parsedHcl: Hcl = {}
+  openFolder?: string
 
   @Mutation
   setSelected({ node, selected }: { node: INode; selected: boolean }) {
@@ -92,6 +94,7 @@ export class TerraGraphStore extends VuexModule {
 
     this.parsedHcl = fileDatas.reduce(merge, {})
     this.generateNodes()
+    this.openFolder = dirPath.split('/').pop()
   }
 
   @Action async selectNode(node: INode) {
@@ -140,44 +143,37 @@ export class TerraGraphStore extends VuexModule {
   }
 
   private generateNodes() {
+    const initialDepth = 3
     const generateNodesRecurse = (
       hclObj: Hcl,
-      parentId: string | null = null,
+      parentId?: string,
       nodes: Node[] = [],
-      depth = 3,
+      depth = initialDepth,
     ): Node[] => {
       if (depth === 0) {
         return nodes
       } else {
         depth--
       }
-      const nodeSize = (d: number = depth) => depth * 10 + 20
       for (const key of Object.keys(hclObj)) {
         const id = uuidv4()
         const value: any = hclObj[key]
-        const node = new Node(key, id, parentId, nodeSize(), depth >= 2)
-        nodes.push(node)
-
-        if (this.isPrimitive(value)) {
-          const primitiveNode = new Node(
-            value,
-            uuidv4(),
-            id,
-            nodeSize(depth - 1),
-            false,
-          )
-          nodes.push(primitiveNode)
-        } else {
-          nodes.concat(generateNodesRecurse(value, id, nodes, depth))
+        const node = new Node(
+          key,
+          id,
+          parentId,
+          depth * 10 + 20,
+          depth >= initialDepth - 1,
+        )
+        if (depth === 1) {
+          node.props = value
         }
+
+        nodes.concat([node, ...generateNodesRecurse(value, id, nodes, depth)])
       }
       return nodes
     }
 
     this.nodes = generateNodesRecurse(this.parsedHcl)
-  }
-
-  private isPrimitive(obj: any) {
-    return obj !== Object(obj)
   }
 }

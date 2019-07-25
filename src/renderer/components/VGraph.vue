@@ -7,7 +7,6 @@ v-layout(
       shrink
     )
     v-breadcrumbs(
-          dark
           :items="breadCrumbItems" 
           divider=">"
         )
@@ -274,30 +273,34 @@ export default class VGraph extends Vue {
       )
   }
 
-  getNodeChildren(node: Node) {
-    return this.nodes.filter(n =>
-      this.inputLinks.some(l => l.sourceId === node.id && l.targetId === n.id),
-    )
-  }
-
   // Make store value watchable
   get selectedNode() {
     return vxm.graph.selectedNode
   }
 
-  @Watch('selectedNode', { immediate: true })
+  @Watch('selectedNode')
   buildBreadCrumb(newSelection: Node) {
     if (!newSelection) {
-      this.breadCrumbItems = []
+      return
+    }
+    const prefix = []
+    const suffix = [{ text: newSelection.name }]
+    if (vxm.graph.openFolder) {
+      prefix.push({ text: vxm.graph.openFolder })
+    }
+    if (!newSelection) {
+      this.breadCrumbItems = prefix
       return
     }
 
-    this.breadCrumbItems = this.getParentTree(newSelection)
-      .map(n => {
-        return { text: n.name }
-      })
-      .reverse()
-      .concat([{ text: newSelection.name }])
+    this.breadCrumbItems = prefix.concat(
+      this.getParentTree(newSelection)
+        .map(n => {
+          return { text: n.name }
+        })
+        .reverse()
+        .concat(suffix),
+    )
   }
 
   getParentTree(node: Node): Node[] {
