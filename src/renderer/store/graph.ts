@@ -7,17 +7,17 @@ import uuidv4 from 'uuid/v4'
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules'
 
 export interface INode {
-  id: string
-  name: string
-  radius: number
-  visible: boolean
-  selected: boolean
+  readonly id: string
+  readonly name: string
+  readonly radius: number
+  readonly visible: boolean
+  readonly selected: boolean
   readonly expanded: boolean
 }
 
 export interface ILink {
-  sourceId: string
-  targetId: string
+  readonly sourceId: string
+  readonly targetId: string
 }
 
 class Node implements INode {
