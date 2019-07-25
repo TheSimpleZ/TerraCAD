@@ -1,7 +1,15 @@
 {
-    "typescript.experimental.useSeparateSyntaxServer": true,
-    "typescript.implementationsCodeLens.enabled": true,
-    "typescript.preferences.quoteStyle": "single",
-    "typescript.referencesCodeLens.enabled": true,
-    "typescript.suggest.completeFunctionCalls": true
+  "typescript.experimental.useSeparateSyntaxServer": true,
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "tslint.configFile": "tslint.json",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true,
+    "source.organizeImports": true
+  },
+  "editor.formatOnSave": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "tslint.typeCheck": true
 }

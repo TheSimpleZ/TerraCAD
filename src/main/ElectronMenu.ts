@@ -4,13 +4,6 @@ export default class ElectronMenu {
     win: BrowserWindow
     isMac = process.platform === 'darwin'
 
-    openFolder() {
-        const folderName = dialog.showOpenDialog(this.win, { properties: ['openDirectory'] })
-
-        if (folderName)
-            this.win.webContents.send('folder-opened', folderName[0])
-    }
-
     template: object[] = [
         // { role: 'appMenu' }
         ...(this.isMac ? [{
@@ -24,16 +17,16 @@ export default class ElectronMenu {
                 { role: 'hideothers' },
                 { role: 'unhide' },
                 { type: 'separator' },
-                { role: 'quit' }
-            ]
+                { role: 'quit' },
+            ],
         }] : []),
         // { role: 'fileMenu' }
         {
             label: 'File',
             submenu: [
                 { label: 'Open folder', click: () => { this.openFolder() }, accelerator: 'CommandOrControl+O' },
-                this.isMac ? { role: 'close' } : { role: 'quit' }
-            ]
+                this.isMac ? { role: 'close' } : { role: 'quit' },
+            ],
         },
         // { role: 'editMenu' }
         {
@@ -54,15 +47,15 @@ export default class ElectronMenu {
                         label: 'Speech',
                         submenu: [
                             { role: 'startspeaking' },
-                            { role: 'stopspeaking' }
-                        ]
-                    }
+                            { role: 'stopspeaking' },
+                        ],
+                    },
                 ] : [
                         { role: 'delete' },
                         { type: 'separator' },
-                        { role: 'selectAll' }
-                    ])
-            ]
+                        { role: 'selectAll' },
+                    ]),
+            ],
         },
         // { role: 'viewMenu' }
         {
@@ -76,8 +69,8 @@ export default class ElectronMenu {
                 { role: 'zoomin' },
                 { role: 'zoomout' },
                 { type: 'separator' },
-                { role: 'togglefullscreen' }
-            ]
+                { role: 'togglefullscreen' },
+            ],
         },
         // { role: 'windowMenu' }
         {
@@ -89,27 +82,35 @@ export default class ElectronMenu {
                     { type: 'separator' },
                     { role: 'front' },
                     { type: 'separator' },
-                    { role: 'window' }
+                    { role: 'window' },
                 ] : [
-                        { role: 'close' }
-                    ])
-            ]
+                        { role: 'close' },
+                    ]),
+            ],
         },
         {
             role: 'help',
             submenu: [
                 {
                     label: 'Learn More',
-                    click() { shell.openExternalSync('https://electronjs.org') }
-                }
-            ]
-        }
+                    click() { shell.openExternalSync('https://electronjs.org') },
+                },
+            ],
+        },
     ]
 
     constructor(win: BrowserWindow) {
-        this.win = win;
-        const menu = Menu.buildFromTemplate(this.template);
-        Menu.setApplicationMenu(menu);
+        this.win = win
+        const menu = Menu.buildFromTemplate(this.template)
+        Menu.setApplicationMenu(menu)
+    }
+
+    openFolder() {
+        const folderName = dialog.showOpenDialog(this.win, { properties: ['openDirectory'] })
+
+        if (folderName) {
+            this.win.webContents.send('folder-opened', folderName[0])
+        }
     }
 
 }

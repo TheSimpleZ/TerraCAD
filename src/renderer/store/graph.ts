@@ -1,4 +1,4 @@
-import { VuexModule, mutation, action, getter, Module } from 'vuex-class-component';
+import { VuexModule, mutation, action, getter, Module } from 'vuex-class-component'
 
 interface SelectedNode {
     id: string,
@@ -9,16 +9,16 @@ interface SelectedNode {
 @Module({ namespacedPath: 'graph/' })
 export class GraphStore extends VuexModule {
 
-    _selectedNode?: SelectedNode;
+    @getter selectedNode?: SelectedNode
 
-    get selectedNode() {
-        return this._selectedNode;
+    @mutation changeSelection(node: SelectedNode) {
+        this.selectedNode = node
     }
 
-    @mutation newSelection(node: SelectedNode) {
-        this._selectedNode = node;
+    @action async newSelection(node: SelectedNode) {
+        this.changeSelection(node)
     }
 
 }
 
-export const graph = GraphStore.ExtractVuexModule(GraphStore);
+export const graph = GraphStore.ExtractVuexModule(GraphStore)

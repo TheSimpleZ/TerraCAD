@@ -24,16 +24,16 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import TerraGraph from "./components/TerraGraph.vue";
+import { Component, Vue } from 'vue-property-decorator'
+import TerraGraph from './components/TerraGraph.vue'
 
 @Component({
   components: {
-    TerraGraph
-  }
+    TerraGraph,
+  },
 })
 export default class App extends Vue {
-  drawer = false;
+  drawer = false
 }
 </script>
 
