@@ -1,34 +1,32 @@
-<template>
-  <v-app dark>
-    <v-navigation-drawer clipped fixed app>
-      <v-list dense>
-        <v-list-tile>
-          <v-list-tile-action>
-            <v-icon>settings</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>Settings</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-      </v-list>
-    </v-navigation-drawer>
+<template lang="pug">
+  v-app(
+    dark
+  )
+    v-navigation-drawer(
+      clipped
+      fixed
+      app
+    )
+      node-props
 
-    <v-content>
-      <v-container fill-height fluid>
-        <v-graph />
-      </v-container>
-    </v-content>
-  </v-app>
+    v-content
+      v-container(
+        fill-height
+        fluid
+      )
+        v-graph
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import VGraph from './components/VGraph.vue'
+import NodeProps from './components/NodeProps.vue'
 import { vxm } from './store'
 
 @Component({
   components: {
     VGraph,
+    NodeProps,
   },
 })
 export default class App extends Vue {

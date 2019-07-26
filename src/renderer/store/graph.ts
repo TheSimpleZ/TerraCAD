@@ -5,6 +5,7 @@ import merge from 'lodash.merge'
 import * as path from 'path'
 import uuidv4 from 'uuid/v4'
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules'
+import Vue from 'vue'
 
 export interface INode {
   readonly id: string
@@ -20,7 +21,7 @@ export interface ILink {
   readonly targetId: string
 }
 
-class Node implements INode {
+export class Node implements INode {
   constructor(
     public name: string,
     public id: string = uuidv4(),
@@ -43,12 +44,6 @@ interface Hcl {
 
 @Module({ generateMutationSetters: true })
 export class TerraGraphStore extends VuexModule {
-  get links(): Link[] {
-    return this.nodes
-      .filter(n => n.parentId)
-      .map(n => new Link(n.parentId!, n.id))
-  }
-
   get selectedNode() {
     return this.nodes.find(n => n.selected)
   }
@@ -57,31 +52,19 @@ export class TerraGraphStore extends VuexModule {
     return this.nodes.filter(n => n.visible)
   }
 
+  links: Link[] = []
   nodes: Node[] = []
   parsedHcl: Hcl = {}
   openFolder?: string = ''
 
   @Mutation
-  setSelected({ node, selected }: { node: INode; selected: boolean }) {
-    const targetNode = this.nodes.find(n => n.id === node.id)
-    if (targetNode) {
-      targetNode.selected = selected
-    }
-  }
-  @Mutation
-  setVisible({ node, visible }: { node: INode; visible: boolean }) {
-    const targetNode = this.nodes.find(n => n.id === node.id)
-    if (targetNode) {
-      targetNode.visible = visible
-    }
+  setSelected(node: INode) {
+    this.forEachNode(n => (n.selected = node.id === n.id))
   }
 
   @Mutation
-  setExpanded({ node, expanded }: { node: INode; expanded: boolean }) {
-    const targetNode = this.nodes.find(n => n.id === node.id)
-    if (targetNode) {
-      targetNode.expanded = expanded
-    }
+  setProps({ node, props }: { node: INode; props?: object }) {
+    this.setNodeProp(node, n => (n.props = props))
   }
 
   @Action
@@ -98,16 +81,17 @@ export class TerraGraphStore extends VuexModule {
     this.parsedHcl = fileDatas.reduce(merge, {})
     this.nodes = this.generateNodes(this.parsedHcl)
     this.openFolder = dirPath.split('/').pop()
+    this.links = this.nodes
+      .filter(n => n.parentId)
+      .map(n => new Link(n.parentId!, n.id))
   }
 
   @Action async selectNode(node: INode) {
-    this.nodes.forEach(n => {
-      this.setSelected({ node: n, selected: n.id === node.id })
-    })
+    this.setSelected(node)
   }
 
-  @Action async toggleVisible(node: INode) {
-    this.setVisible({ node, visible: !node.visible })
+  @Action async updateProps(node: Node, props?: object) {
+    this.setProps({ node, props })
   }
 
   @Action
@@ -117,22 +101,37 @@ export class TerraGraphStore extends VuexModule {
     } else if (this.isSelected(node)) {
       this.collapseNode(node)
     }
-    this.setExpanded({ node, expanded: !node.expanded })
   }
 
-  private expandNode(node: INode) {
-    this.getNodeChildren(node).forEach(n =>
-      this.setVisible({ node: n, visible: true }),
+  @Mutation
+  expandNode(node: Node) {
+    this.getNodeChildren(node).forEach(cn =>
+      this.setNodeProp(cn, n => (n.visible = true)),
     )
+    this.setNodeProp(node, n => (n.expanded = true))
   }
 
-  private collapseNode(node: INode) {
-    const collapseRecurse = (rNode: INode) => {
-      this.getNodeChildren(rNode).forEach(n => collapseRecurse(n))
-      this.setVisible({ node: rNode, visible: false })
+  @Mutation collapseNode(node: Node) {
+    const collapseRecurse = (rNode: Node) => {
+      if (rNode.visible) {
+        this.getNodeChildren(rNode).forEach(n => collapseRecurse(n))
+        this.setNodeProp(rNode, n => (n.visible = false))
+      }
     }
 
     this.getNodeChildren(node).forEach(n => collapseRecurse(n))
+    this.setNodeProp(node, n => (n.expanded = false))
+  }
+
+  private setNodeProp(node: INode, propFunc: (n: Node) => void) {
+    const targetNode = this.nodes.find(n => n.id === node.id)
+    if (targetNode) {
+      propFunc(targetNode)
+    }
+  }
+
+  private forEachNode(propFunc: (n: Node) => void) {
+    this.nodes.forEach(propFunc)
   }
 
   private isSelected(node: INode) {
@@ -164,13 +163,13 @@ export class TerraGraphStore extends VuexModule {
         const id = uuidv4()
         const value: any = hclObj[key]
         const node = new Node(
-          key,
+          key.split('_').join(' '),
           id,
           parentId,
           depth * 10 + 20,
           depth >= initialDepth - 1,
         )
-        if (depth === 1) {
+        if (depth === 0) {
           node.props = value
         }
 

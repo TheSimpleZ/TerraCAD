@@ -81,7 +81,7 @@ export default class VGraph extends Vue {
   }> = []
 
   // Config
-  repellantStrength = -120
+  repellantStrength = -10
   linkDistance = 5
   linkPullingForce = 2
 
