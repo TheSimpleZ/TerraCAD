@@ -4,50 +4,35 @@ v-layout(
   column
 )
   v-flex(
-    shrink
-  )
-    v-breadcrumbs(
-      dark
-      :items="breadCrumbItems" 
-      divider=">"
+      shrink
     )
+    v-breadcrumbs(
+          :items="breadCrumbItems" 
+          divider=">"
+        )
   v-flex
     svg.svg(
-      xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink= "http://www.w3.org/1999/xlink"
-      ref="svg"
-      pointer-events="all"
-      )
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink= "http://www.w3.org/1999/xlink"
+          ref="svg"
+          pointer-events="all"
+          )
       g(:transform="transform")
-        //-> links
         g.links#l-links(ref="linksGroup")
-        //- -> nodes
         g.nodes#l-nodes(ref="nodesGroup")
-        //- -> Node Labels
         g.labels#node-labels(ref="labelsGroup")
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch, Ref } from "vue-property-decorator";
-import * as d3select from "d3-selection";
-import * as d3drag from "d3-drag";
-import * as d3zoom from "d3-zoom";
-import * as d3force from "d3-force";
-import * as d3transition from "d3-transition";
-import { vxm } from "../store";
-const getD3Event = () => d3select.event;
-
-export interface INode {
-  id: string;
-  name: string;
-  radius: number;
-  visible: boolean;
-}
-
-export interface ILink {
-  source_id: string;
-  target_id: string;
-}
+import { Component, Prop, Vue, Watch, Ref } from 'vue-property-decorator'
+import * as d3select from 'd3-selection'
+import * as d3drag from 'd3-drag'
+import * as d3zoom from 'd3-zoom'
+import * as d3force from 'd3-force'
+import * as d3transition from 'd3-transition'
+import { vxm } from '../store'
+import { INode, ILink } from '../store/graph'
+const getD3Event = () => d3select.event
 
 export class Node implements INode, d3force.SimulationNodeDatum {
   constructor(
@@ -58,8 +43,9 @@ export class Node implements INode, d3force.SimulationNodeDatum {
     public radius: number = 10,
     public visible: boolean = true,
     public expanded: boolean = false,
+    public selected: boolean = false,
     public fx?: number,
-    public fy?: number
+    public fy?: number,
   ) {}
 }
 
@@ -67,81 +53,85 @@ class Link implements d3force.SimulationLinkDatum<Node> {
   constructor(
     public source: Node,
     public target: Node,
-    public index?: number | undefined
+    public index?: number | undefined,
   ) {}
 }
 
 @Component
 export default class VGraph extends Vue {
-  @Prop() readonly inputNodes!: INode[];
-  @Prop() readonly inputLinks!: ILink[];
-  @Prop({ default: true }) readonly nodeLabels!: boolean;
+  get inputLinks(): ILink[] {
+    return vxm.graph.links
+  }
+  @Prop({ default: true }) readonly nodeLabels!: boolean
 
-  @Ref() readonly svg!: SVGElement;
-  @Ref() readonly linksGroup!: SVGGElement;
-  @Ref() readonly nodesGroup!: SVGGElement;
-  @Ref() readonly labelsGroup!: SVGGElement;
+  @Ref() readonly svg!: SVGElement
+  @Ref() readonly linksGroup!: SVGGElement
+  @Ref() readonly nodesGroup!: SVGGElement
+  @Ref() readonly labelsGroup!: SVGGElement
 
-  nodes: Node[] = [];
-  links: Link[] = [];
+  nodes: Node[] = []
+  links: Link[] = []
 
-  simulation: d3force.Simulation<Node, Link> | null = null;
-  transform = d3zoom.zoomIdentity;
-  breadCrumbItems: { text: string; disabled?: boolean; href?: string }[] = [];
+  simulation: d3force.Simulation<Node, Link> | null = null
+  transform = d3zoom.zoomIdentity
+  breadCrumbItems: Array<{
+    text: string
+    disabled?: boolean
+    href?: string
+  }> = []
 
   // Config
-  repellantStrength = -120;
-  linkDistance = 5;
-  linkPullingForce = 2;
+  repellantStrength = -10
+  linkDistance = 5
+  linkPullingForce = 2
 
   created() {
     this.simulation = d3force
       .forceSimulation<Node, Link>()
-      .force("charge", d3force.forceManyBody().strength(this.repellantStrength))
+      .force('charge', d3force.forceManyBody().strength(this.repellantStrength))
       .force(
-        "collide",
-        d3force.forceCollide<Node>().radius(node => node.radius)
+        'collide',
+        d3force.forceCollide<Node>().radius(node => node.radius),
       )
       .force(
-        "link",
+        'link',
         d3force
           .forceLink<Node, Link>()
           .id(node => {
-            return node.id.toString();
+            return node.id.toString()
           })
           .distance(link => link.source.radius * this.linkDistance)
-          .strength(this.linkPullingForce)
-      );
+          .strength(this.linkPullingForce),
+      )
+      .on('tick', () => this.drawGarph())
   }
 
   mounted() {
     const svgSelect = d3select
       .select(this.svg)
-      .call(<any>(
-        d3zoom
-          .zoom<SVGElement, {}>()
-          .on("zoom", () => (this.transform = getD3Event().transform))
-      ))
-      .on("dblclick.zoom", null);
+      .call(d3zoom
+        .zoom<SVGElement, {}>()
+        .on('zoom', () => (this.transform = getD3Event().transform)) as any)
+      .on('dblclick.zoom', null)
   }
 
   get center() {
     return {
       x: this.$el.clientWidth / 2 + this.$el.clientWidth / 200,
-      y: this.$el.clientHeight / 2 + this.$el.clientHeight / 200
-    };
+      y: this.$el.clientHeight / 2 + this.$el.clientHeight / 200,
+    }
   }
 
   get visibleNodes() {
-    return this.nodes.filter(n => n.visible);
+    return vxm.graph.visibleNodes
   }
 
-  @Watch("inputNodes", { deep: true })
+  @Watch('visibleNodes', { deep: true })
   buildNodes(newNodes: INode[]) {
     this.nodes = newNodes.map((netNode: INode, index: number) => {
-      const nodeId = !netNode.id ? index.toString() : netNode.id;
+      const nodeId = !netNode.id ? index.toString() : netNode.id
       const nodeName =
-        !netNode.name && netNode.name !== "0" ? `node ${nodeId}` : netNode.name;
+        !netNode.name && netNode.name !== '0' ? `node ${nodeId}` : netNode.name
 
       const newNode = new Node(
         nodeId,
@@ -149,238 +139,246 @@ export default class VGraph extends Vue {
         this.center.x,
         this.center.y,
         netNode.radius,
-        netNode.visible
-      );
+        netNode.visible,
+        netNode.expanded,
+      )
 
       // Check if node already exists and assign current
-      const oldNode = this.nodes.find(n => n.id == nodeId);
+      const oldNode = this.nodes.find(n => n.id === nodeId)
       if (oldNode) {
-        newNode.x = oldNode.x;
-        newNode.y = oldNode.y;
-        newNode.fx = oldNode.fx;
-        newNode.fy = oldNode.fy;
+        newNode.x = oldNode.x
+        newNode.y = oldNode.y
+        newNode.fx = oldNode.fx
+        newNode.fy = oldNode.fy
       }
 
-      return newNode;
-    });
+      return newNode
+    })
   }
 
-  @Watch("inputLinks")
-  @Watch("visibleNodes")
+  @Watch('inputLinks')
+  @Watch('nodes')
   buildLinks() {
     this.links = this.inputLinks
       .filter(
         link =>
-          this.visibleNodes.some(n => n.id == link.source_id) &&
-          this.visibleNodes.some(n => n.id == link.target_id)
+          this.nodes.some(n => n.id === link.sourceId) &&
+          this.nodes.some(n => n.id === link.targetId),
       )
       .map((link: ILink, index: number) => {
-        const sourceNode = this.visibleNodes.find(n => n.id == link.source_id)!;
-        const targetNode = this.visibleNodes.find(n => n.id == link.target_id)!;
-        return new Link(sourceNode, targetNode);
-      });
+        const sourceNode = this.nodes.find(n => n.id === link.sourceId)!
+        const targetNode = this.nodes.find(n => n.id === link.targetId)!
+        return new Link(sourceNode, targetNode)
+      })
   }
 
-  @Watch("visibleNodes", { deep: true })
-  @Watch("links", { deep: true })
-  drawGarph() {
-    this.drawNodes();
-    if (this.nodeLabels) this.drawLabels();
-    this.drawLinks();
-
+  @Watch('nodes')
+  @Watch('links')
+  updateSimulation() {
     if (this.simulation) {
-      this.simulation.nodes(this.visibleNodes);
-      if (this.links && this.links.length)
+      if (!this.simulation.nodes().length) {
+        this.simulation.alpha(1).restart()
+      }
+
+      this.simulation.nodes(this.nodes)
+      if (this.links && this.links.length) {
         this.simulation
-          .force<d3force.ForceLink<Node, Link>>("link")!
-          .links(this.links);
+          .force<d3force.ForceLink<Node, Link>>('link')!
+          .links(this.links)
+      }
     }
+  }
+
+  drawGarph() {
+    this.drawNodes()
+    if (this.nodeLabels) {
+      this.drawLabels()
+    }
+    this.drawLinks()
   }
 
   drawLinks() {
     function updatePos(e: any) {
-      return e
-        .attr("x1", (link: any) => link.source.x)
-        .attr("y1", (link: any) => link.source.y)
-        .attr("x2", (link: any) => link.target.x)
-        .attr("y2", (link: any) => link.target.y);
+      return
     }
     d3select
       .select(this.linksGroup)
-      .selectAll("line")
+      .selectAll('line')
       .data(this.links)
       .join(
-        enter => {
-          const e = enter.append("line").attr("stroke", "white");
-          updatePos(e.transition());
-          return e;
-        },
-        updatePos,
-        exit =>
-          exit
-            .transition()
-            .duration(25)
-            .attr("x2", (link: any) => link.source.x)
-            .attr("y2", (link: any) => link.source.y)
-            .remove()
-      );
+        enter => enter.append('line').attr('stroke', 'white'),
+        update =>
+          update
+            .attr('x1', (link: any) => link.source.x)
+            .attr('y1', (link: any) => link.source.y)
+            .attr('x2', (link: any) => link.target.x)
+            .attr('y2', (link: any) => link.target.y),
+        exit => exit.remove(),
+      )
   }
 
   drawNodes() {
     d3select
       .select(this.nodesGroup)
-      .selectAll("circle")
-      .data(this.visibleNodes, n => (n as Node).id)
+      .selectAll('circle')
+      .data(this.nodes, n => (n as Node).id)
       .join(
         enter => {
-          let e = enter
-            .append("circle")
-            .attr("class", this.nodeClass)
+          const e = enter
+            .append('circle')
+            .attr('class', this.nodeClass)
+            .attr('cx', node => node.x)
+            .attr('cy', node => node.y)
             .call(
               d3drag
                 .drag<SVGCircleElement, Node>()
-                .on("start", this.dragstarted)
-                .on("drag", this.dragged)
-                .on("end", this.dragended)
+                .on('start', this.dragstarted)
+                .on('drag', this.dragged)
+                .on('end', this.dragended),
             )
-            .on("click", this.nodeClicked);
+            .on('click', this.nodeClicked)
 
-          e.transition()
-            .attr("cx", node => node.x)
-            .attr("cy", node => node.y)
-            .attr("r", node => node.radius);
+          e.transition().attr('r', node => node.radius)
 
-          return e;
+          return e
         },
         update =>
           update
-            .attr("cx", node => node.x)
-            .attr("cy", node => node.y)
-            .attr("class", this.nodeClass),
+            .attr('cx', node => node.x)
+            .attr('cy', node => node.y)
+            .attr('class', this.nodeClass),
         exit =>
           exit
             .transition()
             .duration(25)
-            .attr("r", 0)
-            .remove()
-      );
+            .attr('r', 0)
+            .remove(),
+      )
   }
 
   drawLabels() {
     function updateLabel(e: any) {
       return e
-        .attr("x", (node: any) => node.x + node.radius + 10)
-        .attr("y", (node: any) => node.y)
-        .text((node: any) => node.name);
+        .attr('x', (node: any) => node.x + node.radius + 10)
+        .attr('y', (node: any) => node.y)
+        .text((node: any) => node.name)
     }
     d3select
       .select(this.labelsGroup)
-      .selectAll("text")
-      .data(this.visibleNodes)
+      .selectAll('text')
+      .data(this.nodes)
       .join(
-        enter => updateLabel(enter.append("text").attr("class", "node-label")),
+        enter => updateLabel(enter.append('text').attr('class', 'node-label')),
         updateLabel,
-        exit => exit.remove()
-      );
-  }
-
-  getNodeChildren(node: Node) {
-    return this.nodes.filter(n =>
-      this.inputLinks.some(l => l.source_id == node.id && l.target_id == n.id)
-    );
+        exit => exit.remove(),
+      )
   }
 
   // Make store value watchable
   get selectedNode() {
-    return vxm.graph.selectedNode;
+    return vxm.graph.selectedNode
   }
 
-  @Watch("selectedNode", { immediate: true })
+  // Make store value watchable
+  get openFolder() {
+    return vxm.graph.openFolder
+  }
+
+  @Watch('selectedNode')
+  @Watch('openFolder')
   buildBreadCrumb(newSelection: Node) {
     if (!newSelection) {
-      this.breadCrumbItems = [];
-      return;
+      return
+    }
+    const prefix = []
+    const suffix = [{ text: newSelection.name }]
+    if (this.openFolder) {
+      prefix.push({ text: this.openFolder })
+    }
+    if (!newSelection) {
+      this.breadCrumbItems = prefix
+      return
     }
 
-    this.breadCrumbItems = this.getParentTree(newSelection)
-      .map(n => {
-        return { text: n.name };
-      })
-      .reverse()
-      .concat([{ text: newSelection.name }]);
+    this.breadCrumbItems = prefix.concat(
+      this.getParentTree(newSelection)
+        .map(n => {
+          return { text: n.name }
+        })
+        .reverse()
+        .concat(suffix),
+    )
   }
 
   getParentTree(node: Node): Node[] {
-    const parents = [];
-    let _node = node;
-    let parent: Node | undefined;
-    while ((parent = this.getParentNode(_node))) {
-      parents.push(parent);
-      _node = parent;
+    const parents = []
+    let tempNode = node
+    let parent: Node | undefined
+    while ((parent = this.getParentNode(tempNode))) {
+      parents.push(parent)
+      tempNode = parent
     }
-    return parents;
+    return parents
   }
 
   getParentNode(node: Node): Node | undefined {
     return this.nodes.find(n =>
-      this.inputLinks.some(l => l.source_id == n.id && l.target_id == node.id)
-    );
+      this.inputLinks.some(l => l.sourceId === n.id && l.targetId === node.id),
+    )
   }
 
-  expandNode(node: Node) {
-    this.getNodeChildren(node).forEach(n => (n.visible = true));
-  }
-
-  collapseNode(node: Node) {
-    this.getNodeChildren(node).forEach(this.collapseNode);
-    node.visible = false;
-  }
-
-  nodeClicked(node: Node) {
-    this.$emit("node-click", getD3Event(), node);
+  async nodeClicked(node: Node) {
+    this.$emit('node-click', getD3Event(), node)
 
     if (!node.expanded) {
-      node.expanded = true;
-      this.expandNode(node);
+      await vxm.graph.toggleExpand(node)
+      await vxm.graph.selectNode(node)
+    } else if (this.isSelected(node)) {
+      await vxm.graph.toggleExpand(node)
     } else {
-      this.getNodeChildren(node).forEach(this.collapseNode);
-      node.expanded = false;
+      await vxm.graph.selectNode(node)
     }
+  }
 
-    vxm.graph.newSelection({
-      id: node.id,
-      name: node.name
-    });
+  isSelected(node: Node) {
+    return vxm.graph.selectedNode && vxm.graph.selectedNode.id === node.id
   }
 
   nodeClass(node: Node): string {
-    let cssClass = ["node"];
-    if (this.selectedNode && node.id == this.selectedNode.id)
-      cssClass.push("selected");
-    if (node.fx || node.fy) cssClass.push("pinned");
-    return cssClass.join(" ");
+    const cssClass = ['node']
+    if (this.selectedNode && node.id === this.selectedNode.id) {
+      cssClass.push('selected')
+    }
+    if (node.fx || node.fy) {
+      cssClass.push('pinned')
+    }
+    return cssClass.join(' ')
   }
 
   dragstarted() {
-    const event = getD3Event();
-    if (!event.active) this.simulation!.alphaTarget(0.3).restart();
-    const transform = this.transform;
-    event.subject.fx = event.x;
-    event.subject.fy = event.y;
+    const event = getD3Event()
+    if (!event.active) {
+      this.simulation!.alphaTarget(0.3).restart()
+    }
+    const transform = this.transform
+    event.subject.fx = event.x
+    event.subject.fy = event.y
   }
 
   dragged() {
-    const event = getD3Event();
-    const transform = this.transform;
-    event.subject.fx = event.x;
-    event.subject.fy = event.y;
+    const event = getD3Event()
+    const transform = this.transform
+    event.subject.fx = event.x
+    event.subject.fy = event.y
   }
 
   dragended() {
-    const event = getD3Event();
-    if (!event.active) this.simulation!.alphaTarget(0);
-    event.subject.fx = null;
-    event.subject.fy = null;
+    const event = getD3Event()
+    if (!event.active) {
+      this.simulation!.alphaTarget(0)
+    }
+    event.subject.fx = null
+    event.subject.fy = null
   }
 }
 </script>

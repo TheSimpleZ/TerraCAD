@@ -1,39 +1,42 @@
-<template>
-  <v-app dark>
-    <v-navigation-drawer clipped fixed v-model="drawer" app>
-      <v-list dense>
-        <v-list-tile>
-          <v-list-tile-action>
-            <v-icon>settings</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>Settings</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-      </v-list>
-    </v-navigation-drawer>
-    <v-toolbar app fixed clipped-left>
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-      <v-toolbar-title>TerraCAD</v-toolbar-title>
-    </v-toolbar>
+<template lang="pug">
+  v-app(
+    dark
+  )
+    v-navigation-drawer(
+      clipped
+      fixed
+      app
+    )
+      node-props
 
-    <v-content>
-      <TerraGraph />
-    </v-content>
-  </v-app>
+    v-content
+      v-container(
+        fill-height
+        fluid
+      )
+        v-graph
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import TerraGraph from "./components/TerraGraph.vue";
+import { Component, Vue } from 'vue-property-decorator'
+import VGraph from './components/VGraph.vue'
+import NodeProps from './components/NodeProps.vue'
+import { vxm } from './store'
 
 @Component({
   components: {
-    TerraGraph
-  }
+    VGraph,
+    NodeProps,
+  },
 })
 export default class App extends Vue {
-  drawer = false;
+  drawer = false
+
+  async mounted() {
+    await vxm.graph.importTerraformFolder(
+      '/home/zrean/Documents/TerraCAD/infra',
+    )
+  }
 }
 </script>
 
