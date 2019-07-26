@@ -30,49 +30,46 @@ import * as d3drag from 'd3-drag'
 import * as d3zoom from 'd3-zoom'
 import * as d3force from 'd3-force'
 import * as d3transition from 'd3-transition'
+import * as d3tree from 'd3-hierarchy'
+import uuidv4 from 'uuid/v4'
+
 import { vxm } from '../store'
-import { INode, ILink } from '../store/graph'
+import { Hcl } from '../store/graph'
+import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 const getD3Event = () => d3select.event
 
-export class Node implements INode, d3force.SimulationNodeDatum {
+export class Node {
   constructor(
-    public id: string,
     public name: string,
-    public x: number = 0,
-    public y: number = 0,
     public radius: number = 10,
-    public visible: boolean = true,
-    public expanded: boolean = false,
     public selected: boolean = false,
-    public fx?: number,
-    public fy?: number,
+    public children?: Node[],
+    public hiddenChildren?: Node[],
+    public props?: object,
   ) {}
 }
 
-class Link implements d3force.SimulationLinkDatum<Node> {
-  constructor(
-    public source: Node,
-    public target: Node,
-    public index?: number | undefined,
-  ) {}
+interface SimulationHierarchyNode
+  extends d3force.SimulationNodeDatum,
+    HierarchyNode<Node> {
+  hiddenChildren?: SimulationHierarchyNode[]
 }
 
 @Component
 export default class VGraph extends Vue {
-  get inputLinks(): ILink[] {
-    return vxm.graph.links
-  }
-  @Prop({ default: true }) readonly nodeLabels!: boolean
-
   @Ref() readonly svg!: SVGElement
   @Ref() readonly linksGroup!: SVGGElement
   @Ref() readonly nodesGroup!: SVGGElement
   @Ref() readonly labelsGroup!: SVGGElement
 
-  nodes: Node[] = []
-  links: Link[] = []
+  // nodes: SimulationHierarchyNode[] = []
+  // links: HierarchyLink<Node>[] = []
+  tree: SimulationHierarchyNode = d3tree.hierarchy(new Node('root'))
 
-  simulation: d3force.Simulation<Node, Link> | null = null
+  simulation: d3force.Simulation<
+    SimulationHierarchyNode,
+    HierarchyLink<Node>
+  > | null = null
   transform = d3zoom.zoomIdentity
   breadCrumbItems: Array<{
     text: string
@@ -87,20 +84,19 @@ export default class VGraph extends Vue {
 
   created() {
     this.simulation = d3force
-      .forceSimulation<Node, Link>()
+      .forceSimulation<SimulationHierarchyNode, HierarchyLink<Node>>()
       .force('charge', d3force.forceManyBody().strength(this.repellantStrength))
       .force(
         'collide',
-        d3force.forceCollide<Node>().radius(node => node.radius),
+        d3force
+          .forceCollide<SimulationHierarchyNode>()
+          .radius(node => node.data.radius),
       )
       .force(
         'link',
         d3force
-          .forceLink<Node, Link>()
-          .id(node => {
-            return node.id.toString()
-          })
-          .distance(link => link.source.radius * this.linkDistance)
+          .forceLink<SimulationHierarchyNode, HierarchyLink<Node>>()
+          .distance(link => link.source.data.radius * this.linkDistance)
           .strength(this.linkPullingForce),
       )
       .on('tick', () => this.drawGarph())
@@ -122,78 +118,80 @@ export default class VGraph extends Vue {
     }
   }
 
-  get visibleNodes() {
-    return vxm.graph.visibleNodes
+  get hclData() {
+    return vxm.graph.parsedHcl
   }
 
-  @Watch('visibleNodes', { deep: true })
-  buildNodes(newNodes: INode[]) {
-    this.nodes = newNodes.map((netNode: INode, index: number) => {
-      const nodeId = !netNode.id ? index.toString() : netNode.id
-      const nodeName =
-        !netNode.name && netNode.name !== '0' ? `node ${nodeId}` : netNode.name
+  @Watch('hclData')
+  buildTree(newData: Hcl) {
+    const convertHclToTree = (hclObj: Hcl, depth = 2): Node[] => {
+      const nodes: Node[] = []
+      for (const key of Object.keys(hclObj)) {
+        const id = uuidv4()
+        const value: any = hclObj[key]
+        const node = new Node(key.split('_').join(' '), 30)
+        if (this.isPrimitive(value) || depth === 0) {
+          node.props = value
+        } else {
+          node.children = convertHclToTree(value, depth - 1)
+        }
 
-      const newNode = new Node(
-        nodeId,
-        nodeName,
-        this.center.x,
-        this.center.y,
-        netNode.radius,
-        netNode.visible,
-        netNode.expanded,
-      )
-
-      // Check if node already exists and assign current
-      const oldNode = this.nodes.find(n => n.id === nodeId)
-      if (oldNode) {
-        newNode.x = oldNode.x
-        newNode.y = oldNode.y
-        newNode.fx = oldNode.fx
-        newNode.fy = oldNode.fy
+        nodes.push(node)
       }
+      return nodes
+    }
 
-      return newNode
+    const rootNode: Node = new Node('root')
+    rootNode.children = convertHclToTree(newData)
+    const tree: SimulationHierarchyNode = d3tree.hierarchy(rootNode)
+    tree.each(n => {
+      n.x = this.center.x
+      n.y = this.center.y
     })
+    if (tree.children) {
+      tree.children.forEach(c => c.eachAfter(this.toggleCollapse))
+    }
+
+    this.tree = tree
   }
 
-  @Watch('inputLinks')
-  @Watch('nodes')
-  buildLinks() {
-    this.links = this.inputLinks
-      .filter(
-        link =>
-          this.nodes.some(n => n.id === link.sourceId) &&
-          this.nodes.some(n => n.id === link.targetId),
-      )
-      .map((link: ILink, index: number) => {
-        const sourceNode = this.nodes.find(n => n.id === link.sourceId)!
-        const targetNode = this.nodes.find(n => n.id === link.targetId)!
-        return new Link(sourceNode, targetNode)
-      })
+  private isPrimitive(test: any) {
+    return test !== Object(test)
   }
 
-  @Watch('nodes')
-  @Watch('links')
-  updateSimulation() {
+  get nodes() {
+    return this.tree.descendants().filter(n => n.data.name != 'root')
+  }
+
+  get links() {
+    return this.tree.links().filter(link => link.source.data.name != 'root')
+  }
+
+  @Watch('tree', { deep: true })
+  updateSimulationNodes() {
     if (this.simulation) {
       if (!this.simulation.nodes().length) {
         this.simulation.alpha(1).restart()
       }
 
       this.simulation.nodes(this.nodes)
-      if (this.links && this.links.length) {
-        this.simulation
-          .force<d3force.ForceLink<Node, Link>>('link')!
-          .links(this.links)
-      }
+    }
+  }
+
+  @Watch('links')
+  updateSimulationLinks() {
+    if (this.simulation) {
+      this.simulation
+        .force<d3force.ForceLink<SimulationHierarchyNode, HierarchyLink<Node>>>(
+          'link',
+        )!
+        .links(this.links)
     }
   }
 
   drawGarph() {
     this.drawNodes()
-    if (this.nodeLabels) {
-      this.drawLabels()
-    }
+    this.drawLabels()
     this.drawLinks()
   }
 
@@ -203,7 +201,7 @@ export default class VGraph extends Vue {
     }
     d3select
       .select(this.linksGroup)
-      .selectAll('line')
+      .selectAll<SVGLineElement, HierarchyLink<Node>>('line')
       .data(this.links)
       .join(
         enter => enter.append('line').attr('stroke', 'white'),
@@ -220,32 +218,32 @@ export default class VGraph extends Vue {
   drawNodes() {
     d3select
       .select(this.nodesGroup)
-      .selectAll('circle')
-      .data(this.nodes, n => (n as Node).id)
+      .selectAll<SVGCircleElement, SimulationHierarchyNode>('circle')
+      .data(this.nodes)
       .join(
         enter => {
           const e = enter
             .append('circle')
             .attr('class', this.nodeClass)
-            .attr('cx', node => node.x)
-            .attr('cy', node => node.y)
+            .attr('cx', node => node.x || this.center.x)
+            .attr('cy', node => node.y || this.center.y)
             .call(
               d3drag
-                .drag<SVGCircleElement, Node>()
+                .drag<SVGCircleElement, SimulationHierarchyNode>()
                 .on('start', this.dragstarted)
                 .on('drag', this.dragged)
                 .on('end', this.dragended),
             )
             .on('click', this.nodeClicked)
 
-          e.transition().attr('r', node => node.radius)
+          e.transition().attr('r', node => node.data.radius)
 
           return e
         },
         update =>
           update
-            .attr('cx', node => node.x)
-            .attr('cy', node => node.y)
+            .attr('cx', node => node.x || this.center.x)
+            .attr('cy', node => node.y || this.center.y)
             .attr('class', this.nodeClass),
         exit =>
           exit
@@ -257,15 +255,19 @@ export default class VGraph extends Vue {
   }
 
   drawLabels() {
-    function updateLabel(e: any) {
+    const updateLabel = (e: any) => {
       return e
-        .attr('x', (node: any) => node.x + node.radius + 10)
-        .attr('y', (node: any) => node.y)
-        .text((node: any) => node.name)
+        .attr(
+          'x',
+          (node: SimulationHierarchyNode) =>
+            (node.x || this.center.x) + node.data.radius + 10,
+        )
+        .attr('y', (node: SimulationHierarchyNode) => node.y)
+        .text((node: SimulationHierarchyNode) => node.data.name)
     }
     d3select
       .select(this.labelsGroup)
-      .selectAll('text')
+      .selectAll<SVGTextElement, SimulationHierarchyNode>('text')
       .data(this.nodes)
       .join(
         enter => updateLabel(enter.append('text').attr('class', 'node-label')),
@@ -274,81 +276,66 @@ export default class VGraph extends Vue {
       )
   }
 
-  // Make store value watchable
-  get selectedNode() {
-    return vxm.graph.selectedNode
-  }
+  // // Make store value watchable
+  // get selectedNode() {
+  //   return vxm.graph.selectedNode
+  // }
 
   // Make store value watchable
   get openFolder() {
     return vxm.graph.openFolder
   }
 
-  @Watch('selectedNode')
-  @Watch('openFolder')
-  buildBreadCrumb(newSelection: Node) {
-    if (!newSelection) {
-      return
-    }
-    const prefix = []
-    const suffix = [{ text: newSelection.name }]
-    if (this.openFolder) {
-      prefix.push({ text: this.openFolder })
-    }
-    if (!newSelection) {
-      this.breadCrumbItems = prefix
-      return
-    }
+  // @Watch('selectedNode')
+  // @Watch('openFolder')
+  // buildBreadCrumb(newSelection: Node) {
+  //   if (!newSelection) {
+  //     return
+  //   }
+  //   const prefix = []
+  //   const suffix = [{ text: newSelection.name }]
+  //   if (this.openFolder) {
+  //     prefix.push({ text: this.openFolder })
+  //   }
+  //   if (!newSelection) {
+  //     this.breadCrumbItems = prefix
+  //     return
+  //   }
 
-    this.breadCrumbItems = prefix.concat(
-      this.getParentTree(newSelection)
-        .map(n => {
-          return { text: n.name }
-        })
-        .reverse()
-        .concat(suffix),
-    )
-  }
+  //   this.breadCrumbItems = prefix.concat(
+  //     this.getParentTree(newSelection)
+  //       .map(n => {
+  //         return { text: n.name }
+  //       })
+  //       .reverse()
+  //       .concat(suffix),
+  //   )
+  // }
 
-  getParentTree(node: Node): Node[] {
-    const parents = []
-    let tempNode = node
-    let parent: Node | undefined
-    while ((parent = this.getParentNode(tempNode))) {
-      parents.push(parent)
-      tempNode = parent
-    }
-    return parents
-  }
-
-  getParentNode(node: Node): Node | undefined {
-    return this.nodes.find(n =>
-      this.inputLinks.some(l => l.sourceId === n.id && l.targetId === node.id),
-    )
-  }
-
-  async nodeClicked(node: Node) {
+  async nodeClicked(node: SimulationHierarchyNode) {
     this.$emit('node-click', getD3Event(), node)
 
-    if (!node.expanded) {
-      await vxm.graph.toggleExpand(node)
-      await vxm.graph.selectNode(node)
-    } else if (this.isSelected(node)) {
-      await vxm.graph.toggleExpand(node)
+    this.toggleCollapse(node)
+  }
+
+  private toggleCollapse(node: SimulationHierarchyNode) {
+    if (node.children) {
+      node.hiddenChildren = node.children
+      node.children = undefined
     } else {
-      await vxm.graph.selectNode(node)
+      node.children = node.hiddenChildren
+      node.hiddenChildren = undefined
     }
   }
 
-  isSelected(node: Node) {
-    return vxm.graph.selectedNode && vxm.graph.selectedNode.id === node.id
-  }
-
-  nodeClass(node: Node): string {
+  // isSelected(node: Node) {
+  //   return vxm.graph.selectedNode && vxm.graph.selectedNode.id === node.id
+  // }
+  nodeClass(node: SimulationHierarchyNode): string {
     const cssClass = ['node']
-    if (this.selectedNode && node.id === this.selectedNode.id) {
-      cssClass.push('selected')
-    }
+    // if (this.selectedNode && node.id === this.selectedNode.id) {
+    //   cssClass.push('selected')
+    // }
     if (node.fx || node.fy) {
       cssClass.push('pinned')
     }

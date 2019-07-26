@@ -27,27 +27,26 @@ v-container(
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { vxm } from '../store'
-import { Node } from '../store/graph'
 
 @Component
 export default class NodeProps extends Vue {
   props?: object = {}
 
-  get selectedNode(): Node | undefined {
-    return vxm.graph.selectedNode
-  }
+  // get selectedNode(): NodeData | undefined {
+  //   return vxm.graph.selectedNode
+  // }
 
-  @Watch('selectedNode')
-  getProps(newSelection: Node) {
-    this.props = newSelection.props
-  }
+  // @Watch('selectedNode')
+  // getProps(newSelection: NodeData) {
+  //   this.props = newSelection.props
+  // }
 
-  @Watch('props')
-  setProps(newProps: object) {
-    if (this.selectedNode) {
-      vxm.graph.updateProps(this.selectedNode, newProps)
-    }
-  }
+  // @Watch('props')
+  // setProps(newProps: object) {
+  //   if (this.selectedNode) {
+  //     vxm.graph.updateProps(this.selectedNode, newProps)
+  //   }
+  // }
 
   isPrimitive(test: any) {
     return test !== Object(test)
