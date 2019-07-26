@@ -5,22 +5,28 @@ import merge from 'lodash.merge'
 import * as path from 'path'
 import uuidv4 from 'uuid/v4'
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules'
-import * as d3tree from 'd3-hierarchy'
 
 export interface Hcl {
   [s: string]: any
 }
 
-export interface ISelectableNode {
-  name: string
-  selected: boolean
-  props?: object
+export class Node {
+  constructor(
+    public name: string,
+    public radius: number = 10,
+    public selected: boolean = false,
+    public children?: Node[],
+    public hiddenChildren?: Node[],
+    public props?: object,
+  ) {}
 }
 
 @Module({ generateMutationSetters: true })
 export class TerraGraphStore extends VuexModule {
   parsedHcl: Hcl = {}
   openFolder?: string = ''
+
+  tree = new Node('root')
 
   // @Mutation
   // setSelected(node: INode) {
@@ -44,7 +50,7 @@ export class TerraGraphStore extends VuexModule {
         }),
     )
     this.parsedHcl = fileDatas.reduce(merge, {})
-    // this.setTree(this.generateTree(this.parsedHcl))
+    this.tree = this.generateTree(this.parsedHcl)
     this.openFolder = dirPath.split('/').pop()
   }
 
@@ -106,36 +112,30 @@ export class TerraGraphStore extends VuexModule {
   //   )
   // }
 
-  // private generateTree(hclData: Hcl) {
-  //   const initialDepth = 3
-  //   const generateTreeRecurse = (hclObj: Hcl, depth = 2): NodeData[] => {
-  //     const nodes: NodeData[] = []
-  //     if (depth === 0) {
-  //       return nodes
-  //     } else {
-  //       depth--
-  //     }
+  private generateTree(hclData: Hcl) {
+    const convertHclToTree = (hclObj: Hcl, depth = 2): Node[] => {
+      const nodes: Node[] = []
+      for (const key of Object.keys(hclObj)) {
+        const id = uuidv4()
+        const value: any = hclObj[key]
+        const node = new Node(key.split('_').join(' '), 30)
+        if (this.isPrimitive(value) || depth === 0) {
+          node.props = value
+        } else {
+          node.children = convertHclToTree(value, depth - 1)
+        }
 
-  //     for (const key of Object.keys(hclObj)) {
-  //       const id = uuidv4()
-  //       const value: any = hclObj[key]
-  //       const node = new NodeData(key.split('_').join(' '), depth * 10 + 20)
-  //       if (depth === 0) {
-  //         node.props = value
-  //       }
+        nodes.push(node)
+      }
+      return nodes
+    }
 
-  //       nodes.push(node)
-  //       if (depth >= initialDepth - 1) {
-  //         node.children = generateTreeRecurse(value, depth)
-  //       } else {
-  //         node.hiddenChildren = generateTreeRecurse(value, depth)
-  //       }
-  //     }
-  //     return nodes
-  //   }
+    const rootNode: Node = new Node('root')
+    rootNode.children = convertHclToTree(hclData)
+    return rootNode
+  }
 
-  //   const rootNode = new NodeData('root')
-  //   rootNode.children = generateTreeRecurse(hclData)
-  //   return rootNode
-  // }
+  private isPrimitive(test: any) {
+    return test !== Object(test)
+  }
 }

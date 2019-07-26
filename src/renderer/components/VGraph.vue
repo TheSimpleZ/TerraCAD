@@ -34,20 +34,9 @@ import * as d3tree from 'd3-hierarchy'
 import uuidv4 from 'uuid/v4'
 
 import { vxm } from '../store'
-import { Hcl } from '../store/graph'
+import { Hcl, Node } from '../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 const getD3Event = () => d3select.event
-
-export class Node {
-  constructor(
-    public name: string,
-    public radius: number = 10,
-    public selected: boolean = false,
-    public children?: Node[],
-    public hiddenChildren?: Node[],
-    public props?: object,
-  ) {}
-}
 
 interface SimulationHierarchyNode
   extends d3force.SimulationNodeDatum,
@@ -118,32 +107,13 @@ export default class VGraph extends Vue {
     }
   }
 
-  get hclData() {
-    return vxm.graph.parsedHcl
+  get stateTree() {
+    return vxm.graph.tree
   }
 
-  @Watch('hclData')
-  buildTree(newData: Hcl) {
-    const convertHclToTree = (hclObj: Hcl, depth = 2): Node[] => {
-      const nodes: Node[] = []
-      for (const key of Object.keys(hclObj)) {
-        const id = uuidv4()
-        const value: any = hclObj[key]
-        const node = new Node(key.split('_').join(' '), 30)
-        if (this.isPrimitive(value) || depth === 0) {
-          node.props = value
-        } else {
-          node.children = convertHclToTree(value, depth - 1)
-        }
-
-        nodes.push(node)
-      }
-      return nodes
-    }
-
-    const rootNode: Node = new Node('root')
-    rootNode.children = convertHclToTree(newData)
-    const tree: SimulationHierarchyNode = d3tree.hierarchy(rootNode)
+  @Watch('stateTree')
+  buildTree(newData: Node) {
+    const tree: SimulationHierarchyNode = d3tree.hierarchy(newData)
     tree.each(n => {
       n.x = this.center.x
       n.y = this.center.y
