@@ -34,13 +34,13 @@ import * as d3tree from 'd3-hierarchy'
 import uuidv4 from 'uuid/v4'
 
 import { vxm } from '../store'
-import { Hcl, Node } from '../store/graph'
+import { Hcl, NodeData, nodeDataFactory } from '../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 const getD3Event = () => d3select.event
 
 interface SimulationHierarchyNode
   extends d3force.SimulationNodeDatum,
-    HierarchyNode<Node> {
+    HierarchyNode<NodeData> {
   hiddenChildren?: SimulationHierarchyNode[]
 }
 
@@ -52,12 +52,12 @@ export default class VGraph extends Vue {
   @Ref() readonly labelsGroup!: SVGGElement
 
   // nodes: SimulationHierarchyNode[] = []
-  // links: HierarchyLink<Node>[] = []
-  tree: SimulationHierarchyNode = d3tree.hierarchy(new Node('root'))
+  // links: HierarchyLink<NodeData>[] = []
+  tree: SimulationHierarchyNode = d3tree.hierarchy(nodeDataFactory('root'))
 
   simulation: d3force.Simulation<
     SimulationHierarchyNode,
-    HierarchyLink<Node>
+    HierarchyLink<NodeData>
   > | null = null
   transform = d3zoom.zoomIdentity
   breadCrumbItems: Array<{
@@ -73,7 +73,7 @@ export default class VGraph extends Vue {
 
   created() {
     this.simulation = d3force
-      .forceSimulation<SimulationHierarchyNode, HierarchyLink<Node>>()
+      .forceSimulation<SimulationHierarchyNode, HierarchyLink<NodeData>>()
       .force('charge', d3force.forceManyBody().strength(this.repellantStrength))
       .force(
         'collide',
@@ -84,7 +84,7 @@ export default class VGraph extends Vue {
       .force(
         'link',
         d3force
-          .forceLink<SimulationHierarchyNode, HierarchyLink<Node>>()
+          .forceLink<SimulationHierarchyNode, HierarchyLink<NodeData>>()
           .distance(link => link.source.data.radius * this.linkDistance)
           .strength(this.linkPullingForce),
       )
@@ -112,7 +112,7 @@ export default class VGraph extends Vue {
   }
 
   @Watch('stateTree')
-  buildTree(newData: Node) {
+  buildTree(newData: NodeData) {
     const tree: SimulationHierarchyNode = d3tree.hierarchy(newData)
     tree.each(n => {
       n.x = this.center.x
@@ -152,9 +152,9 @@ export default class VGraph extends Vue {
   updateSimulationLinks() {
     if (this.simulation) {
       this.simulation
-        .force<d3force.ForceLink<SimulationHierarchyNode, HierarchyLink<Node>>>(
-          'link',
-        )!
+        .force<
+          d3force.ForceLink<SimulationHierarchyNode, HierarchyLink<NodeData>>
+        >('link')!
         .links(this.links)
     }
   }
@@ -171,7 +171,7 @@ export default class VGraph extends Vue {
     }
     d3select
       .select(this.linksGroup)
-      .selectAll<SVGLineElement, HierarchyLink<Node>>('line')
+      .selectAll<SVGLineElement, HierarchyLink<NodeData>>('line')
       .data(this.links)
       .join(
         enter => enter.append('line').attr('stroke', 'white'),
@@ -258,7 +258,7 @@ export default class VGraph extends Vue {
 
   // @Watch('selectedNode')
   // @Watch('openFolder')
-  // buildBreadCrumb(newSelection: Node) {
+  // buildBreadCrumb(newSelection: NodeData) {
   //   if (!newSelection) {
   //     return
   //   }
@@ -285,7 +285,16 @@ export default class VGraph extends Vue {
   async nodeClicked(node: SimulationHierarchyNode) {
     this.$emit('node-click', getD3Event(), node)
 
-    this.toggleCollapse(node)
+    if (node.children) {
+      if (vxm.graph.selectedNode === node.data) {
+        this.toggleCollapse(node)
+      } else {
+        vxm.graph.selectNode(node.data)
+      }
+    } else {
+      vxm.graph.selectNode(node.data)
+      this.toggleCollapse(node)
+    }
   }
 
   private toggleCollapse(node: SimulationHierarchyNode) {
@@ -298,14 +307,15 @@ export default class VGraph extends Vue {
     }
   }
 
-  // isSelected(node: Node) {
-  //   return vxm.graph.selectedNode && vxm.graph.selectedNode.id === node.id
+  // isSelected(node: NodeData) {
+  //   return vxm.graph.selectedNode === node
   // }
   nodeClass(node: SimulationHierarchyNode): string {
+    const selectedNode = vxm.graph.selectedNode
     const cssClass = ['node']
-    // if (this.selectedNode && node.id === this.selectedNode.id) {
-    //   cssClass.push('selected')
-    // }
+    if (selectedNode === node.data) {
+      cssClass.push('selected')
+    }
     if (node.fx || node.fy) {
       cssClass.push('pinned')
     }

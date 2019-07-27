@@ -10,15 +10,25 @@ export interface Hcl {
   [s: string]: any
 }
 
-export class Node {
-  constructor(
-    public name: string,
-    public radius: number = 10,
-    public selected: boolean = false,
-    public children?: Node[],
-    public hiddenChildren?: Node[],
-    public props?: object,
-  ) {}
+export interface NodeData {
+  name: string
+  radius: number
+  selected: boolean
+  children?: NodeData[]
+  hiddenChildren?: NodeData[]
+  props?: object
+}
+
+export function nodeDataFactory(
+  name: string,
+  radius = 20,
+  selected = false,
+): NodeData {
+  return {
+    name,
+    radius,
+    selected,
+  }
 }
 
 @Module({ generateMutationSetters: true })
@@ -26,17 +36,13 @@ export class TerraGraphStore extends VuexModule {
   parsedHcl: Hcl = {}
   openFolder?: string = ''
 
-  tree = new Node('root')
+  tree = nodeDataFactory('root')
+  selectedNode: NodeData | null = null
 
-  // @Mutation
-  // setSelected(node: INode) {
-  //   this.forEachNode(n => (n.selected = node.id === n.id))
-  // }
-
-  // @Mutation
-  // setProps({ node, props }: { node: INode; props?: object }) {
-  //   this.setNodeProp(node, n => (n.props = props))
-  // }
+  @Action
+  async selectNode(node: NodeData) {
+    this.selectedNode = node
+  }
 
   @Action
   async importTerraformFolder(dirPath: string) {
@@ -54,71 +60,13 @@ export class TerraGraphStore extends VuexModule {
     this.openFolder = dirPath.split('/').pop()
   }
 
-  // @Action async selectNode(node: INode) {
-  //   this.setSelected(node)
-  // }
-
-  // @Action async updateProps(node: NodeData, props?: object) {
-  //   this.setProps({ node, props })
-  // }
-
-  // @Action
-  // async toggleExpand(node: INode) {
-  //   if (!node.expanded) {
-  //     this.expandNode(node)
-  //   } else if (this.isSelected(node)) {
-  //     this.collapseNode(node)
-  //   }
-  // }
-
-  // @Mutation
-  // expandNode(node: INode) {
-  //   this.getNodeChildren(node).forEach(cn =>
-  //     this.setNodeProp(cn, n => (n.visible = true)),
-  //   )
-  //   this.setNodeProp(node, n => (n.expanded = true))
-  // }
-
-  // @Mutation collapseNode(node: INode) {
-  //   const collapseRecurse = (rNode: NodeData) => {
-  //     if (rNode.visible) {
-  //       this.getNodeChildren(rNode).forEach(n => collapseRecurse(n))
-  //       this.setNodeProp(rNode, n => (n.visible = false))
-  //     }
-  //   }
-
-  //   this.getNodeChildren(node).forEach(n => collapseRecurse(n))
-  //   this.setNodeProp(node, n => (n.expanded = false))
-  // }
-
-  // private setNodeProp(node: INode, propFunc: (n: NodeData) => void) {
-  //   const targetNode = this.nodes.find(n => n.id === node.id)
-  //   if (targetNode) {
-  //     propFunc(targetNode)
-  //   }
-  // }
-
-  // private forEachNode(propFunc: (n: NodeData) => void) {
-  //   this.nodes.forEach(propFunc)
-  // }
-
-  // private isSelected(node: INode) {
-  //   return this.selectedNode && this.selectedNode.id === node.id
-  // }
-
-  // private getNodeChildren(node: INode) {
-  //   return this.nodes.filter(n =>
-  //     this.links.some(l => l.sourceId === node.id && l.targetId === n.id),
-  //   )
-  // }
-
   private generateTree(hclData: Hcl) {
-    const convertHclToTree = (hclObj: Hcl, depth = 2): Node[] => {
-      const nodes: Node[] = []
+    const convertHclToTree = (hclObj: Hcl, depth = 2): NodeData[] => {
+      const nodes: NodeData[] = []
       for (const key of Object.keys(hclObj)) {
         const id = uuidv4()
         const value: any = hclObj[key]
-        const node = new Node(key.split('_').join(' '), 30)
+        const node = nodeDataFactory(key.split('_').join(' '), 30)
         if (this.isPrimitive(value) || depth === 0) {
           node.props = value
         } else {
@@ -130,7 +78,7 @@ export class TerraGraphStore extends VuexModule {
       return nodes
     }
 
-    const rootNode: Node = new Node('root')
+    const rootNode = nodeDataFactory('root')
     rootNode.children = convertHclToTree(hclData)
     return rootNode
   }
