@@ -2,13 +2,6 @@
   v-app(
     dark
   )
-    v-navigation-drawer(
-      clipped
-      fixed
-      app
-    )
-      node-props
-
     v-content
       v-container(
         fill-height
@@ -20,13 +13,11 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import VGraph from './components/VGraph.vue'
-import NodeProps from './components/NodeProps.vue'
 import { vxm } from './store'
 
 @Component({
   components: {
     VGraph,
-    NodeProps,
   },
 })
 export default class App extends Vue {
