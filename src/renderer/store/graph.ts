@@ -12,22 +12,14 @@ export interface Hcl {
 
 export interface NodeData {
   name: string
-  radius: number
-  selected: boolean
   children?: NodeData[]
   hiddenChildren?: NodeData[]
   props?: object
 }
 
-export function nodeDataFactory(
-  name: string,
-  radius = 20,
-  selected = false,
-): NodeData {
+export function nodeDataFactory(name: string): NodeData {
   return {
     name,
-    radius,
-    selected,
   }
 }
 
@@ -64,9 +56,8 @@ export class TerraGraphStore extends VuexModule {
     const convertHclToTree = (hclObj: Hcl, depth = 2): NodeData[] => {
       const nodes: NodeData[] = []
       for (const key of Object.keys(hclObj)) {
-        const id = uuidv4()
         const value: any = hclObj[key]
-        const node = nodeDataFactory(key.split('_').join(' '), 30)
+        const node = nodeDataFactory(key.split('_').join(' '))
         if (this.isPrimitive(value) || depth === 0) {
           node.props = value
         } else {
