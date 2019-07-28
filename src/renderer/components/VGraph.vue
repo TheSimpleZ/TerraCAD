@@ -63,6 +63,17 @@ export default class VGraph extends Vue {
   get openFolder() {
     return vxm.graph.openFolder
   }
+
+  get selectedNode() {
+    return vxm.graph.selectedNode
+  }
+
+  set selectedNode(value) {
+    if (value) {
+      vxm.graph.selectNode(value)
+    }
+  }
+
   @Ref() readonly svg!: SVGElement
   @Ref() readonly linksGroup!: SVGGElement
   @Ref() readonly nodesGroup!: SVGGElement
@@ -251,31 +262,28 @@ export default class VGraph extends Vue {
       )
   }
 
-  @Watch('selectedNode')
-  @Watch('openFolder')
-  buildBreadCrumb(newSelection: NodeData) {
-    if (!newSelection) {
-      return
-    }
-    const prefix = []
-    const suffix = [{ text: newSelection.name }]
-    if (this.openFolder) {
-      prefix.push({ text: this.openFolder })
-    }
-    if (!newSelection) {
-      this.breadCrumbItems = prefix
-      return
-    }
+  // @Watch('selectedNode')
+  // @Watch('openFolder')
+  // buildBreadCrumb() {
+  //   const prefix = []
+  //   if (this.openFolder) {
+  //     prefix.push({ text: this.openFolder })
+  //   }
+  //   if (!this.selectedNode) {
+  //     this.breadCrumbItems = prefix
+  //     return
+  //   }
+  //   const suffix = [{ text: this.selectedNode.name }]
 
-    // this.breadCrumbItems = prefix.concat(
-    //   this.getParentTree(newSelection)
-    //     .map(n => {
-    //       return { text: n.name }
-    //     })
-    //     .reverse()
-    //     .concat(suffix),
-    // )
-  }
+  //   this.breadCrumbItems = prefix.concat(
+  //     this.getParentTree(this.selectedNode)
+  //       .map(n => {
+  //         return { text: n.name }
+  //       })
+  //       .reverse()
+  //       .concat(suffix),
+  //   )
+  // }
 
   async nodeClicked(node: SimulationHierarchyNode) {
     this.$emit('node-click', getD3Event(), node)
@@ -284,18 +292,17 @@ export default class VGraph extends Vue {
       if (vxm.graph.selectedNode === node.data) {
         this.toggleCollapse(node)
       } else {
-        vxm.graph.selectNode(node.data)
+        this.selectedNode = node.data
       }
     } else {
-      vxm.graph.selectNode(node.data)
+      this.selectedNode = node.data
       this.toggleCollapse(node)
     }
   }
 
   private nodeClass(node: SimulationHierarchyNode): string {
-    const selectedNode = vxm.graph.selectedNode
     const cssClass = ['node']
-    if (selectedNode === node.data) {
+    if (this.selectedNode === node.data) {
       cssClass.push('selected')
     }
     if (node.fx || node.fy) {
