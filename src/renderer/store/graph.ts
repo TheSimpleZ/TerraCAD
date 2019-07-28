@@ -54,9 +54,22 @@ export class TerraGraphStore extends VuexModule {
   }
 
   private generateTree(hclData: Hcl) {
-    const convertHclToTree = (hclObj: Hcl, depth = 2): NodeData[] => {
+    const topLevelBlocksDepth: { [s: string]: number } = {
+      resource: 2,
+      data: 2,
+      variable: 1,
+      output: 1,
+      locals: 1,
+      modeul: 1,
+      provider: 0,
+      terraform: 1,
+    }
+    const convertHclToTree = (hclObj: Hcl, depth?: number): NodeData[] => {
       const nodes: NodeData[] = []
       for (const key of Object.keys(hclObj)) {
+        if (!depth && depth !== 0) {
+          depth = topLevelBlocksDepth[key]
+        }
         const value: any = hclObj[key]
         const node = nodeDataFactory(key.split('_').join(' '))
         if (this.isPrimitive(value) || depth === 0) {

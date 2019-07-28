@@ -7,17 +7,20 @@
         fill-height
         fluid
       )
+        prop-card
         v-graph
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import VGraph from './components/VGraph.vue'
+import PropCard from './components/PropCard.vue'
 import { vxm } from './store'
 
 @Component({
   components: {
     VGraph,
+    PropCard,
   },
 })
 export default class App extends Vue {

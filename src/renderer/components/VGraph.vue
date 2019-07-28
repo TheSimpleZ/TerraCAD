@@ -9,6 +9,7 @@ v-layout(
     v-breadcrumbs(
           :items="breadCrumbItems" 
           divider=">"
+          large
         )
   v-flex
     svg.svg(
@@ -276,7 +277,7 @@ export default class VGraph extends Vue {
       this.breadCrumbItems = this.selectedNode
         .ancestors()
         .map(n => {
-          return { text: n.data.name }
+          return { text: n.data.name, disabled: true }
         })
         .reverse()
     }
