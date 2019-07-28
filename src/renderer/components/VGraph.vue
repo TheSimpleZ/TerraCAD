@@ -90,16 +90,19 @@ export default class VGraph extends Vue {
     href?: string
   }> = []
 
-  tree: SimulationHierarchyNode = d3tree.hierarchy({ name: 'root' })
+  tree: SimulationHierarchyNode = d3tree.hierarchy(nodeDataFactory())
 
   // Config
-  repellantStrength = -100
+  repellantStrength = -1000
 
   linkDistance = (l: HierarchyLink<NodeData>) => {
     const targetPerimiter = this.getNodePerimiter(l.target)
     const sourcePerimiter = this.getNodePerimiter(l.source)
 
-    const padding = targetPerimiter && sourcePerimiter ? 200 : 0
+    const padding =
+      targetPerimiter && sourcePerimiter
+        ? targetPerimiter * sourcePerimiter * 0.001
+        : 0
 
     return targetPerimiter + sourcePerimiter + padding
   }
@@ -123,11 +126,14 @@ export default class VGraph extends Vue {
   }
 
   @Watch('stateTree')
-  buildTree(newTree: NodeData) {
-    const tree: SimulationHierarchyNode = d3tree.hierarchy(newTree)
+  buildTree(newTree: HierarchyNode<NodeData>) {
+    const tree: SimulationHierarchyNode = newTree.copy()
     if (tree.children) {
-      tree.children.forEach(c => c.eachAfter(this.toggleCollapse))
+      tree.children.forEach(this.toggleCollapse)
     }
+
+    tree.fx = 0
+    tree.fy = 0
 
     this.tree = tree
   }
@@ -135,7 +141,7 @@ export default class VGraph extends Vue {
   created() {
     this.simulation = d3force
       .forceSimulation<SimulationHierarchyNode, HierarchyLink<NodeData>>()
-      .alphaTarget(0.4)
+      .alphaDecay(0.005)
       .force('charge', d3force.forceManyBody())
       .force(
         'collide',
@@ -143,14 +149,12 @@ export default class VGraph extends Vue {
           .forceCollide<SimulationHierarchyNode>()
           .radius(node => this.nodeRadius(node.depth)),
       )
-      // .force('x', d3force.forceX<SimulationHierarchyNode>())
-      // .force('y', d3force.forceY<SimulationHierarchyNode>())
       .force(
         'link',
         d3force.forceLink<SimulationHierarchyNode, HierarchyLink<NodeData>>(),
       )
       .on('tick', () => this.drawGarph())
-      .stop()
+    // .stop()
   }
 
   @Watch('tree', { deep: true })
@@ -166,10 +170,9 @@ export default class VGraph extends Vue {
         >('link')!
         .links(this.links)
         .distance(this.linkDistance)
+        .strength(1)
 
-      if (newTree.height !== oldTree.height) {
-        this.simulation.alpha(1).restart()
-      }
+      this.simulation.alpha(1)
     }
   }
 
@@ -262,47 +265,41 @@ export default class VGraph extends Vue {
       )
   }
 
-  // @Watch('selectedNode')
-  // @Watch('openFolder')
-  // buildBreadCrumb() {
-  //   const prefix = []
-  //   if (this.openFolder) {
-  //     prefix.push({ text: this.openFolder })
-  //   }
-  //   if (!this.selectedNode) {
-  //     this.breadCrumbItems = prefix
-  //     return
-  //   }
-  //   const suffix = [{ text: this.selectedNode.name }]
-
-  //   this.breadCrumbItems = prefix.concat(
-  //     this.getParentTree(this.selectedNode)
-  //       .map(n => {
-  //         return { text: n.name }
-  //       })
-  //       .reverse()
-  //       .concat(suffix),
-  //   )
-  // }
+  @Watch('selectedNode')
+  @Watch('openFolder')
+  buildBreadCrumb() {
+    if (this.selectedNode) {
+      this.breadCrumbItems = this.selectedNode
+        .ancestors()
+        .map(n => {
+          return { text: n.data.name }
+        })
+        .reverse()
+    }
+  }
 
   async nodeClicked(node: SimulationHierarchyNode) {
     this.$emit('node-click', getD3Event(), node)
 
     if (node.children) {
-      if (vxm.graph.selectedNode === node.data) {
-        this.toggleCollapse(node)
+      if (this.isSelected(node)) {
+        this.toggleCollapse(this.selectedNode!)
       } else {
-        this.selectedNode = node.data
+        this.selectedNode = node
       }
     } else {
-      this.selectedNode = node.data
       this.toggleCollapse(node)
+      this.selectedNode = node
     }
+  }
+
+  private isSelected(node: SimulationHierarchyNode) {
+    return this.selectedNode && this.selectedNode.data == node.data
   }
 
   private nodeClass(node: SimulationHierarchyNode): string {
     const cssClass = ['node']
-    if (this.selectedNode === node.data) {
+    if (this.selectedNode && this.selectedNode.data === node.data) {
       cssClass.push('selected')
     }
     if (node.fx || node.fy) {

@@ -3,8 +3,8 @@ import { promises as fsPromises } from 'fs'
 import hcl from 'gopher-hcl'
 import merge from 'lodash.merge'
 import * as path from 'path'
-import uuidv4 from 'uuid/v4'
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules'
+import * as d3tree from 'd3-hierarchy'
 
 export interface Hcl {
   [s: string]: any
@@ -17,7 +17,7 @@ export interface NodeData {
   props?: object
 }
 
-export function nodeDataFactory(name: string): NodeData {
+export function nodeDataFactory(name: string = 'root'): NodeData {
   return {
     name,
   }
@@ -28,12 +28,12 @@ export class TerraGraphStore extends VuexModule {
   parsedHcl: Hcl = {}
   openFolder?: string = ''
 
-  tree = nodeDataFactory('root')
-  selectedNode: NodeData | null = null
+  tree: d3tree.HierarchyNode<NodeData> = d3tree.hierarchy(nodeDataFactory())
+  selectedNode: d3tree.HierarchyNode<NodeData> | null = null
 
   @Action
-  async selectNode(node: NodeData) {
-    this.selectedNode = node
+  async selectNode(node: d3tree.HierarchyNode<NodeData>) {
+    this.selectedNode = node.copy()
   }
 
   @Action
@@ -48,8 +48,8 @@ export class TerraGraphStore extends VuexModule {
         }),
     )
     this.parsedHcl = fileDatas.reduce(merge, {})
-    this.tree = this.generateTree(this.parsedHcl)
     this.openFolder = dirPath.split('/').pop()
+    this.tree = d3tree.hierarchy(this.generateTree(this.parsedHcl))
   }
 
   private generateTree(hclData: Hcl) {
@@ -69,7 +69,7 @@ export class TerraGraphStore extends VuexModule {
       return nodes
     }
 
-    const rootNode = nodeDataFactory('root')
+    const rootNode = nodeDataFactory(this.openFolder)
     rootNode.children = convertHclToTree(hclData)
     return rootNode
   }
