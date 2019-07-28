@@ -1,5 +1,5 @@
 <template lang="pug">
-  v-card(
+  v-card.card(
     v-if="selectedNode"
     max-width="344"
     class="mx-auto"
@@ -8,7 +8,10 @@
     v-card-title.title
       | {{selectedNode.data.name}}
     v-card-text.body-1
-      | I'm card text
+      pre(
+        v-highlightjs="propsString"
+      )
+        code.JSON
   
 </template>
 
@@ -23,11 +26,26 @@ export default class PropCard extends Vue {
   get selectedNode() {
     return vxm.graph.selectedNode
   }
+
+  get propsString() {
+    if (this.selectedNode) {
+      return JSON.stringify(this.selectedNode.data.props, undefined, 2).replace(
+        /\"([^(\")"]+)\":/g,
+        '$1:',
+      )
+    }
+  }
 }
 </script>
 
 <style lang="stylus" scoped>
-.v-card {
-  position: absolute;
+@import url('../../../node_modules/highlight.js/styles/an-old-hope.css');
+
+.card {
+  position: absolute !important;
+}
+
+.body-1 {
+  overflow-x: auto;
 }
 </style>
