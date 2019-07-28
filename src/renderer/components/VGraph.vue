@@ -364,7 +364,7 @@ export default class VGraph extends Vue {
         n.hiddenChildren = n.children
         n.children = undefined
       })
-    } else {
+    } else if (node.hiddenChildren) {
       node.children = node.hiddenChildren
       node.hiddenChildren = undefined
     }
