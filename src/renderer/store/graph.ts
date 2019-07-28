@@ -33,7 +33,8 @@ export class TerraGraphStore extends VuexModule {
 
   @Action
   async selectNode(node: d3tree.HierarchyNode<NodeData>) {
-    this.selectedNode = node.copy()
+    this.selectedNode =
+      this.tree.descendants().find(n => n.data === node.data) || null
   }
 
   @Action

@@ -310,9 +310,6 @@ export default class VGraph extends Vue {
 
   private dragstarted() {
     const event = getD3Event()
-    if (event.subject.data.name === 'root') {
-      return
-    }
     if (!event.active) {
       this.simulation!.alphaTarget(0.3).restart()
     }
@@ -323,9 +320,6 @@ export default class VGraph extends Vue {
 
   private dragged() {
     const event = getD3Event()
-    if (event.subject.data.name === 'root') {
-      return
-    }
     const transform = this.transform
     event.subject.fx = event.x
     event.subject.fy = event.y
@@ -333,7 +327,7 @@ export default class VGraph extends Vue {
 
   private dragended() {
     const event = getD3Event()
-    if (event.subject.data.name === 'root') {
+    if (!event.subject.parent) {
       return
     }
     if (!event.active) {
@@ -353,7 +347,7 @@ export default class VGraph extends Vue {
 
       const innerPerimiter =
         sourceChildrenRadius /
-          Math.cos(Math.PI / 2 - Math.PI / n.children.length) -
+          Math.cos(Math.PI / 2 - Math.PI / (n.children.length + 1)) -
         sourceChildrenRadius
 
       const outerPerimiter =
