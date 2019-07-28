@@ -65,7 +65,11 @@ export default class VGraph extends Vue {
   }
 
   get selectedNode() {
-    return vxm.graph.selectedNode
+    return this.tree
+      .descendants()
+      .find(
+        n => !!vxm.graph.selectedNode && n.data === vxm.graph.selectedNode.data,
+      )
   }
 
   set selectedNode(value) {
@@ -424,6 +428,7 @@ export default class VGraph extends Vue {
 .node-label {
   fill: #CCC;
   // font-size: 20px;
+  pointer-events: none;
 }
 
 .link-label {
