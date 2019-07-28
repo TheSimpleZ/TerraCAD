@@ -1,6 +1,6 @@
 <template lang="pug">
   v-card.card(
-    v-if="selectedNode"
+    v-if="propsString"
     max-width="344"
     class="mx-auto"
     elevation=20
@@ -28,7 +28,7 @@ export default class PropCard extends Vue {
   }
 
   get propsString() {
-    if (this.selectedNode) {
+    if (this.selectedNode && this.selectedNode.data.props) {
       return JSON.stringify(this.selectedNode.data.props, undefined, 2).replace(
         /\"([^(\")"]+)\":/g,
         '$1:',
