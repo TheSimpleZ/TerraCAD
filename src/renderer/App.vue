@@ -27,9 +27,7 @@ export default class App extends Vue {
   drawer = false
 
   async mounted() {
-    await vxm.graph.importTerraformFolder(
-      '/home/zrean/Documents/TerraCAD/infra',
-    )
+    await vxm.graph.importTerraformFolder('~/Documents/TerraCAD/infra')
   }
 }
 </script>
