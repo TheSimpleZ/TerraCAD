@@ -12,7 +12,7 @@ You must have Node.js 12+ and the latest version of npm installed to run this pr
 
 ### Install dependencies
 
-Clone the repo and run command:
+Clone the repository and run the following command:
 
 ```
 npm install
