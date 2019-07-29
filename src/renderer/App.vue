@@ -15,7 +15,7 @@
 import { Component, Vue } from 'vue-property-decorator'
 import TerraGraph from './components/TerraGraph.vue'
 import PropCard from './components/PropCard.vue'
-import { vxm } from './store'
+import { vxm } from '../store'
 import { remote } from 'electron'
 
 @Component({

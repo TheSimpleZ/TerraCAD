@@ -6,7 +6,7 @@ import {
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib'
 import './plugins/vuex'
-import './renderer/store'
+import './store'
 import ElectronMenu from './main/ElectronMenu'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'

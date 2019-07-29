@@ -34,8 +34,8 @@ import * as d3transition from 'd3-transition'
 import * as d3tree from 'd3-hierarchy'
 import uuidv4 from 'uuid/v4'
 
-import { vxm } from '../store'
-import { Hcl, NodeData, nodeDataFactory } from '../store/graph'
+import { vxm } from '../../store'
+import { Hcl, NodeData, nodeDataFactory } from '../../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 import { watchFile } from 'fs'
 const getD3Event = () => d3select.event

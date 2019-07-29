@@ -24,7 +24,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "src/renderer/store/sharedMutations.js"
+    "src/store/sharedMutations.js"
   ],
   "exclude": ["node_modules"]
 }
