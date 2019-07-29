@@ -10,3 +10,13 @@
 <!-- @vuese:VGraph:events:end -->
 
 
+## Methods
+
+<!-- @vuese:VGraph:methods:start -->
+|Method|Description|Parameters|
+|---|---|---|
+|drawGarph|Used to render the graph|-|
+
+<!-- @vuese:VGraph:methods:end -->
+
+
