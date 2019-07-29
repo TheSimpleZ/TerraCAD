@@ -20,6 +20,6 @@ npm install
 
 Open Visual Studio Code and press F5.
 
-## Reference
+## Documentation
 
-###
+[Read the docs here](https://thesimplez.github.io/TerraCAD)

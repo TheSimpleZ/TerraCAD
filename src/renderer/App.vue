@@ -8,18 +8,19 @@
         fluid
       )
         prop-card
-        v-graph
+        terra-graph
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import VGraph from './components/VGraph.vue'
+import TerraGraph from './components/TerraGraph.vue'
 import PropCard from './components/PropCard.vue'
 import { vxm } from './store'
+import { remote } from 'electron'
 
 @Component({
   components: {
-    VGraph,
+    TerraGraph,
     PropCard,
   },
 })
@@ -27,7 +28,9 @@ export default class App extends Vue {
   drawer = false
 
   async mounted() {
-    await vxm.graph.importTerraformFolder('~/Documents/TerraCAD/infra')
+    await vxm.graph.importTerraformFolder(
+      remote.app.getPath('home') + '/Documents/TerraCAD/infra',
+    )
   }
 }
 </script>

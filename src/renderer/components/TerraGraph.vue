@@ -47,7 +47,7 @@ interface SimulationHierarchyNode
 }
 
 @Component
-export default class VGraph extends Vue {
+export default class TerraGraph extends Vue {
   get stateTree() {
     return vxm.graph.tree
   }

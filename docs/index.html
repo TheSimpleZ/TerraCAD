@@ -1,10 +1,13 @@
-<!DOCTYPE>
+<!DOCTYPE >
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Components</title>
-    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>TerraCAD</title>
+    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css" />
   </head>
   <body>
     <div id="docute"></div>
@@ -12,7 +15,39 @@
     <script>
       new Docute({
         target: '#docute',
-        sidebar: JSON.parse('[{&#34;title&#34;:&#34;BASIC&#34;,&#34;links&#34;:[{&#34;title&#34;:&#34;PropCard&#34;,&#34;link&#34;:&#34;/components/PropCard&#34;},{&#34;title&#34;:&#34;VGraph&#34;,&#34;link&#34;:&#34;/components/VGraph&#34;}]}]'.replace(/\&\#34\;/g, '"'))
+        title: 'TerraCAD',
+        darkThemeToggler: true,
+        highlight: ['typescript'],
+        sidebar: [
+          {
+            title: 'Guides', // Optional
+            collapsable: true, // Optional
+            children: [
+              {
+                title: 'Installation',
+                link: '/guides/installation',
+              },
+              {
+                title: 'Development',
+                link: '/guides/development',
+              },
+            ],
+          },
+          {
+            title: 'Componenets', // Optional
+            collapsable: true, // Optional
+            children: [
+              {
+                title: 'TerraGraph',
+                link: '/components/TerraGraph',
+              },
+              {
+                title: 'PropCard',
+                link: '/components/PropCard',
+              },
+            ],
+          },
+        ],
       })
     </script>
   </body>

@@ -4,7 +4,6 @@
   "typescript.preferences.quoteStyle": "single",
   "typescript.referencesCodeLens.enabled": true,
   "typescript.suggest.completeFunctionCalls": true,
-  "tslint.configFile": "tslint.json",
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
