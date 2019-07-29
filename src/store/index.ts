@@ -1,6 +1,6 @@
 import Vuex from 'vuex'
 // @ts-ignore
-import createSharedMutations from './sharedMutations.js.js'
+import createSharedMutations from './sharedMutations.js'
 import { TerraGraphStore } from './graph'
 
 export const store = new Vuex.Store({

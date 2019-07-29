@@ -8,7 +8,9 @@
         fluid
       )
         prop-card
-        terra-graph
+        terra-graph(
+          :input-nodes="stateTree"
+        )
 </template>
 
 <script lang="ts">
@@ -26,6 +28,10 @@ import { remote } from 'electron'
 })
 export default class App extends Vue {
   drawer = false
+
+  get stateTree() {
+    return vxm.graph.tree
+  }
 
   async mounted() {
     await vxm.graph.importTerraformFolder(

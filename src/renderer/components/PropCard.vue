@@ -19,16 +19,20 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch, Ref } from 'vue-property-decorator'
 
-import { vxm } from '../store'
+import { vxm } from '../../store'
 
-@Component
+@Component({
+  name: 'PropCard',
+})
+// @vuese
+// Card that displays the properties of the currently selected node
 export default class PropCard extends Vue {
-  @Prop() message!: string
-
+  // Currently selected node
   get selectedNode() {
     return vxm.graph.selectedNode
   }
 
+  // Pretty-print the props of the selected node
   get propsString() {
     if (this.selectedNode && this.selectedNode.data.props) {
       return JSON.stringify(this.selectedNode.data.props, undefined, 2).replace(

@@ -25,7 +25,7 @@ v-layout(
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch, Ref } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch, Ref, Emit } from 'vue-property-decorator'
 import * as d3select from 'd3-selection'
 import * as d3drag from 'd3-drag'
 import * as d3zoom from 'd3-zoom'
@@ -47,10 +47,10 @@ interface SimulationHierarchyNode
 }
 
 @Component
+// Renders and simulates nodes on a svg
 export default class TerraGraph extends Vue {
-  get stateTree() {
-    return vxm.graph.tree
-  }
+  // Nodes that should be rendered
+  @Prop({ required: true }) inputNodes!: HierarchyNode<NodeData>
 
   get nodes() {
     return this.tree.descendants()
@@ -130,7 +130,7 @@ export default class TerraGraph extends Vue {
     )
   }
 
-  @Watch('stateTree')
+  @Watch('inputNodes')
   buildTree(newTree: HierarchyNode<NodeData>) {
     const tree: SimulationHierarchyNode = newTree.copy()
     if (tree.children) {
@@ -175,7 +175,7 @@ export default class TerraGraph extends Vue {
         >('link')!
         .links(this.links)
         .distance(this.linkDistance)
-        .strength(1)
+        .strength(0.3)
 
       this.simulation.alpha(1)
     }
@@ -225,7 +225,7 @@ export default class TerraGraph extends Vue {
                 .on('drag', this.dragged)
                 .on('end', this.dragended),
             )
-            .on('click', this.nodeClicked)
+            .on('click', this.nodeClick)
 
           e.attr('r', node => this.nodeRadius(node.depth))
 
@@ -285,8 +285,11 @@ export default class TerraGraph extends Vue {
     }
   }
 
-  async nodeClicked(node: SimulationHierarchyNode) {
-    this.$emit('node-click', getD3Event(), node)
+  // Fires when a node is clicked
+  // @arg The clicked node
+  @Emit()
+  async nodeClick(node: SimulationHierarchyNode) {
+    // this.$emit('node-click', getD3Event(), node)
 
     if (node.children) {
       if (this.isSelected(node)) {
@@ -301,7 +304,7 @@ export default class TerraGraph extends Vue {
   }
 
   private isSelected(node: SimulationHierarchyNode) {
-    return this.selectedNode && this.selectedNode.data == node.data
+    return this.selectedNode && this.selectedNode.data === node.data
   }
 
   private nodeClass(node: SimulationHierarchyNode): string {

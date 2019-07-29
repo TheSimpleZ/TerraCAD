@@ -1,12 +1,4 @@
 # PropCard
 
-## Props
-
-<!-- @vuese:PropCard:props:start -->
-|Name|Description|Type|Required|Default|
-|---|---|---|---|---|
-|message|-|—|`false`|-|
-
-<!-- @vuese:PropCard:props:end -->
-
+Card that displays the properties of the currently selected node
 
