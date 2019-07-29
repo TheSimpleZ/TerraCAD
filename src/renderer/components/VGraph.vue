@@ -181,6 +181,8 @@ export default class VGraph extends Vue {
     }
   }
 
+  // @vuese
+  // Used to render the graph
   drawGarph() {
     this.drawNodes()
     this.drawLabels()

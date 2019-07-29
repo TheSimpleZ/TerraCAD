@@ -23,6 +23,8 @@ import { vxm } from '../store'
 
 @Component
 export default class PropCard extends Vue {
+  @Prop() message!: string
+
   get selectedNode() {
     return vxm.graph.selectedNode
   }
