@@ -2,7 +2,7 @@
 
 TerraCAD visualized terraform projects as a network graph with collapsable nodes.
 
-![network-overview](/images/network-overview.png)
+![network-overview](images/network-overview.png)
 
 _Sample of opened network_
 
