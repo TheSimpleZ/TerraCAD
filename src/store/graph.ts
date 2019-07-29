@@ -44,8 +44,8 @@ export class TerraGraphStore extends VuexModule {
       filenames
         .filter(f => f.split('.').pop() === 'tf')
         .map(async f => {
-          const filepath = path.join(dirPath, f)
-          return hcl.parse(await fsPromises.readFile(filepath, 'utf-8'))
+          const filePath = path.join(dirPath, f)
+          return hcl.parse(await fsPromises.readFile(filePath, 'utf-8'))
         }),
     )
     this.parsedHcl = fileDatas.reduce(merge, {})
@@ -60,22 +60,23 @@ export class TerraGraphStore extends VuexModule {
       variable: 1,
       output: 1,
       locals: 1,
-      modeul: 1,
-      provider: 0,
+      module: 1,
+      provider: 1,
       terraform: 1,
     }
     const convertHclToTree = (hclObj: Hcl, depth?: number): NodeData[] => {
       const nodes: NodeData[] = []
       for (const key of Object.keys(hclObj)) {
-        if (!depth && depth !== 0) {
-          depth = topLevelBlocksDepth[key]
+        let initialDepth = depth
+        if (!initialDepth && initialDepth !== 0) {
+          initialDepth = topLevelBlocksDepth[key]
         }
         const value: any = hclObj[key]
         const node = nodeDataFactory(key.split('_').join(' '))
-        if (this.isPrimitive(value) || depth === 0) {
+        if (this.isPrimitive(value) || initialDepth === 0) {
           node.props = value
         } else {
-          node.children = convertHclToTree(value, depth - 1)
+          node.children = convertHclToTree(value, initialDepth - 1)
         }
 
         nodes.push(node)
