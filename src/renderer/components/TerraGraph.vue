@@ -158,7 +158,7 @@ export default class TerraGraph extends Vue {
         'link',
         d3force.forceLink<SimulationHierarchyNode, HierarchyLink<NodeData>>(),
       )
-      .on('tick', () => this.drawGarph())
+      .on('tick', () => this.drawGraph())
     // .stop()
   }
 
@@ -183,7 +183,7 @@ export default class TerraGraph extends Vue {
 
   // @vuese
   // Used to render the graph
-  drawGarph() {
+  drawGraph() {
     this.drawNodes()
     this.drawLabels()
     this.drawLinks()
