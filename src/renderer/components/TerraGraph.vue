@@ -60,7 +60,6 @@ export default class TerraGraph extends Vue {
     return this.tree.links()
   }
 
-  // Make store value watchable
   get openFolder() {
     return vxm.graph.openFolder
   }
@@ -159,7 +158,6 @@ export default class TerraGraph extends Vue {
         d3force.forceLink<SimulationHierarchyNode, HierarchyLink<NodeData>>(),
       )
       .on('tick', () => this.drawGraph())
-    // .stop()
   }
 
   @Watch('tree', { deep: true })
@@ -227,7 +225,9 @@ export default class TerraGraph extends Vue {
             )
             .on('click', this.nodeClick)
 
-          e.attr('r', node => this.nodeRadius(node.depth))
+          e.transition()
+            .duration(250)
+            .attr('r', node => this.nodeRadius(node.depth))
 
           return e
         },
@@ -238,9 +238,9 @@ export default class TerraGraph extends Vue {
             .attr('class', this.nodeClass),
         exit =>
           exit
-            // .transition()
-            // .duration(25)
-            // .attr('r', 0)
+            .transition()
+            .duration(30)
+            .attr('r', 0)
             .remove(),
       )
   }
@@ -289,8 +289,6 @@ export default class TerraGraph extends Vue {
   // @arg The clicked node
   @Emit()
   async nodeClick(node: SimulationHierarchyNode) {
-    // this.$emit('node-click', getD3Event(), node)
-
     if (node.children) {
       if (this.isSelected(node)) {
         this.toggleCollapse(this.selectedNode!)

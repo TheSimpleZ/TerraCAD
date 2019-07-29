@@ -1,4 +1,4 @@
-/* This is the main entrypoint for the renderer process. Do not change the filename */
+/* This is the main entry point for the renderer process. Do not change the filename */
 
 import Vue from 'vue'
 import './plugins/vuetify'
