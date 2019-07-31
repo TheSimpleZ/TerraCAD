@@ -34,9 +34,9 @@ export default class App extends Vue {
   }
 
   async mounted() {
-    await vxm.graph.importTerraformFolder(
-      remote.app.getPath('home') + '/Documents/TerraCAD/infra',
-    )
+    // await vxm.graph.importTerraformFolder(
+    //   remote.app.getPath('home') + '/Documents/TerraCAD/infra',
+    // )
   }
 }
 </script>
