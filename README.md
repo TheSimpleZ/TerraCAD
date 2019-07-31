@@ -8,3 +8,7 @@ The plan is to include functionality to edit terraform files using the visualize
 ## Documentation
 
 [Read the docs here](https://thesimplez.github.io/TerraCAD)
+
+## Acknowledgements
+
+Icon made by [Smashicons](https://www.flaticon.com/authors/smashicons) from [www.flaticon.com](https://www.flaticon.com)
