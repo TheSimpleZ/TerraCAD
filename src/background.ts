@@ -1,4 +1,6 @@
 'use strict'
+declare const __static: string
+import path from 'path'
 
 import { app, BrowserWindow, protocol } from 'electron'
 import {
@@ -28,6 +30,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
     },
+    icon: path.join(__static, 'icon.png')
   })
 
   const menu = new ElectronMenu(win)
