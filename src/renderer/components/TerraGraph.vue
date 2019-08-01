@@ -12,6 +12,9 @@ v-layout(
           large
         )
   v-flex
+    prop-card.propCard(
+      :selectedNode="selectedNode"
+    )
     svg.svg(
           xmlns="http://www.w3.org/2000/svg"
           xmlns:xlink= "http://www.w3.org/1999/xlink"
@@ -38,6 +41,7 @@ import { vxm } from '../../store'
 import { Hcl, NodeData, nodeDataFactory } from '../../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 import { watchFile } from 'fs'
+import PropCard from './TerraGraphPropCard.vue'
 const getD3Event = () => d3select.event
 
 interface SimulationHierarchyNode
@@ -46,7 +50,11 @@ interface SimulationHierarchyNode
   hiddenChildren?: SimulationHierarchyNode[]
 }
 
-@Component
+@Component({
+  components: {
+    PropCard,
+  },
+})
 // Renders and simulates nodes on a svg
 export default class TerraGraph extends Vue {
   // Nodes that should be rendered
@@ -382,9 +390,12 @@ export default class TerraGraph extends Vue {
 <style lang="stylus">
 @import '../lib/styl/vars.styl';
 
-.wrapper {
-  height: 100%;
-  width: 100%;
+// .flex{
+// position:relative;
+// }
+.propCard {
+  position: absolute;
+  max-height: 80%;
 }
 
 .svg {
