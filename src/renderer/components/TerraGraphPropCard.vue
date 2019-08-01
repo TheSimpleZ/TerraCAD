@@ -2,16 +2,16 @@
   v-card.card(
     v-if="propsString"
     max-width="344"
-    class="mx-auto"
     elevation=20
     )
     v-card-title.title
       | {{selectedNode.data.name}}
     v-card-text.body-1
-      pre(
-        v-highlightjs="propsString"
-      )
-        code.JSON
+      div.code-wrapper
+        pre(
+          v-highlightjs="propsString"
+        )
+          code.JSON
   
 </template>
 
@@ -20,6 +20,9 @@
 import { Component, Prop, Vue, Watch, Ref } from 'vue-property-decorator'
 
 import { vxm } from '../../store'
+import '../../../node_modules/highlight.js/styles/an-old-hope.css'
+import { HierarchyNode } from 'd3-hierarchy'
+import { NodeData } from '../../store/graph'
 
 @Component({
   name: 'PropCard',
@@ -28,9 +31,7 @@ import { vxm } from '../../store'
 // Card that displays the properties of the currently selected node
 export default class PropCard extends Vue {
   // Currently selected node
-  get selectedNode() {
-    return vxm.graph.selectedNode
-  }
+  @Prop() selectedNode!: HierarchyNode<NodeData>
 
   // Pretty-print the props of the selected node
   get propsString() {
@@ -44,14 +45,20 @@ export default class PropCard extends Vue {
 }
 </script>
 
-<style lang="stylus" scoped>
-@import url('../../../node_modules/highlight.js/styles/an-old-hope.css');
 
+<style lang="stylus" scoped>
 .card {
-  position: absolute !important;
 }
 
 .body-1 {
-  overflow-x: auto;
+}
+
+.code-wrapper {
+  max-height: 70vh;
+  overflow: scroll;
+}
+
+code {
+  display: inline-block;
 }
 </style>
