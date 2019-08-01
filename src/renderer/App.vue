@@ -19,8 +19,8 @@ import TerraGraph from './components/TerraGraph.vue'
 import PropCard from './components/PropCard.vue'
 import { vxm } from '../store'
 import { remote } from 'electron'
-import ScrollBar from 'vue-class-directives'
-import Scrollbar from 'vue-class-directives'
+
+import { Apa } from 'vue-class-directives'
 
 @Component({
   components: {
@@ -36,7 +36,7 @@ export default class App extends Vue {
   }
 
   async mounted() {
-    console.log(Scrollbar.name)
+    console.log(Apa)
     await vxm.graph.importTerraformFolder(
       remote.app.getPath('home') + '/Documents/TerraCAD/infra',
     )

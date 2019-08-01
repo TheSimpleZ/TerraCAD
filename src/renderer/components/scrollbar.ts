@@ -1,20 +1,10 @@
 import Vue, { DirectiveOptions } from 'vue'
-
-// Register a global custom directive called `v-focus`
-Vue.directive('scrollbar', {
-  // When the bound element is inserted into the DOM...
-  inserted(el) {
-    // Focus the element
-    el.focus()
-  },
-})
-
-function Module(cons: () => any): any {
-  console.log(cons.name)
-}
+import { DirectiveBinding } from 'vue/types/options'
 
 class Scrollbar implements DirectiveOptions {
-  inserted() {
-    return 0
+  bind(el: HTMLElement, binding: DirectiveBinding) {
+    console.log(binding.value)
   }
 }
+
+Vue.directive('scrollbar', new Scrollbar())

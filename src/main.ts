@@ -5,6 +5,7 @@ import './plugins/vuetify'
 import './plugins/vuex'
 import './plugins/highlighterjs'
 import 'reflect-metadata'
+import './renderer/components/scrollbar'
 import App from './renderer/App.vue'
 
 Vue.config.productionTip = false
