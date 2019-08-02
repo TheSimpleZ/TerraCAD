@@ -40,67 +40,67 @@ export default class ElectronMenu {
       ],
     },
     // { role: 'editMenu' }
-    {
-      label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...(this.isMac
-          ? [
-              { role: 'pasteAndMatchStyle' },
-              { role: 'delete' },
-              { role: 'selectAll' },
-              { type: 'separator' },
-              {
-                label: 'Speech',
-                submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
-              },
-            ]
-          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
-      ],
-    },
+    // {
+    //   label: 'Edit',
+    //   submenu: [
+    //     { role: 'undo' },
+    //     { role: 'redo' },
+    //     { type: 'separator' },
+    //     { role: 'cut' },
+    //     { role: 'copy' },
+    //     { role: 'paste' },
+    //     ...(this.isMac
+    //       ? [
+    //           { role: 'pasteAndMatchStyle' },
+    //           { role: 'delete' },
+    //           { role: 'selectAll' },
+    //           { type: 'separator' },
+    //           {
+    //             label: 'Speech',
+    //             submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
+    //           },
+    //         ]
+    //       : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+    //   ],
+    // },
     // { role: 'viewMenu' }
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forcereload' },
+        // { role: 'reload' },
+        // { role: 'forcereload' },
         { role: 'toggledevtools' },
-        { type: 'separator' },
-        { role: 'resetzoom' },
-        { role: 'zoomin' },
-        { role: 'zoomout' },
+        // { type: 'separator' },
+        // { role: 'resetzoom' },
+        // { role: 'zoomin' },
+        // { role: 'zoomout' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
       ],
     },
     // { role: 'windowMenu' }
-    {
-      label: 'Window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(this.isMac
-          ? [
-              { type: 'separator' },
-              { role: 'front' },
-              { type: 'separator' },
-              { role: 'window' },
-            ]
-          : [{ role: 'close' }]),
-      ],
-    },
+    // {
+    //   label: 'Window',
+    //   submenu: [
+    //     { role: 'minimize' },
+    //     { role: 'zoom' },
+    //     ...(this.isMac
+    //       ? [
+    //           { type: 'separator' },
+    //           { role: 'front' },
+    //           { type: 'separator' },
+    //           { role: 'window' },
+    //         ]
+    //       : [{ role: 'close' }]),
+    //   ],
+    // },
     {
       role: 'help',
       submenu: [
         {
-          label: 'Learn More',
+          label: 'Read the docs',
           click() {
-            shell.openExternalSync('https://electronjs.org')
+            shell.openExternalSync('https://thesimplez.github.io/TerraCAD')
           },
         },
       ],
