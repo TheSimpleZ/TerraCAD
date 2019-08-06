@@ -2,10 +2,9 @@
   v-card.card(
     v-if="propsString"
     max-width="344"
-    elevation=20
+    elevation=5
     )
-    v-card-title.title
-      | {{selectedNode.data.name}}
+    v-card-title.title {{selectedNode.data.name}}
     v-card-text.body-1
       div.code-wrapper
         pre(
@@ -47,12 +46,6 @@ export default class PropCard extends Vue {
 
 
 <style lang="stylus" scoped>
-.card {
-}
-
-.body-1 {
-}
-
 .code-wrapper {
   max-height: 70vh;
   overflow: scroll;

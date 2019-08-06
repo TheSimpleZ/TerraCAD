@@ -35,12 +35,10 @@ import * as d3zoom from 'd3-zoom'
 import * as d3force from 'd3-force'
 import * as d3transition from 'd3-transition'
 import * as d3tree from 'd3-hierarchy'
-import uuidv4 from 'uuid/v4'
 
 import { vxm } from '../../store'
 import { Hcl, NodeData, nodeDataFactory } from '../../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
-import { watchFile } from 'fs'
 import PropCard from './TerraGraphPropCard.vue'
 const getD3Event = () => d3select.event
 
@@ -61,7 +59,7 @@ export default class TerraGraph extends Vue {
   @Prop({ required: true }) inputNodes!: HierarchyNode<NodeData>
 
   get nodes() {
-    return this.tree.descendants()
+    return this.tree.descendants().filter(n => n.data.name != 'root')
   }
 
   get links() {
@@ -390,9 +388,6 @@ export default class TerraGraph extends Vue {
 <style lang="stylus">
 @import '../lib/styl/vars.styl';
 
-// .flex{
-// position:relative;
-// }
 .propCard {
   position: absolute;
   max-height: 80%;
