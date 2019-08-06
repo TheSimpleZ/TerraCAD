@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, Menu, shell } from 'electron'
-import { store, vxm } from '../store'
+import { vxm } from '../store'
+import { promises as fsPromises } from 'fs'
 
 export default class ElectronMenu {
   win: BrowserWindow
@@ -35,6 +36,13 @@ export default class ElectronMenu {
             this.openFolder()
           },
           accelerator: 'CommandOrControl+O',
+        },
+        {
+          label: 'Save',
+          click: () => {
+            this.save()
+          },
+          accelerator: 'CommandOrControl+S',
         },
         this.isMac ? { role: 'close' } : { role: 'quit' },
       ],
@@ -120,6 +128,14 @@ export default class ElectronMenu {
 
     if (folderName) {
       vxm.graph.importTerraformFolder(folderName[0])
+    }
+  }
+
+  async save() {
+    const fileName = dialog.showSaveDialog(this.win, {})
+
+    if (fileName) {
+      await fsPromises.writeFile(fileName, JSON.stringify(vxm.graph.parsedHcl))
     }
   }
 }

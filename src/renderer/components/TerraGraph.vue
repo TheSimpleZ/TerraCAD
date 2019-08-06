@@ -59,7 +59,7 @@ export default class TerraGraph extends Vue {
   @Prop({ required: true }) inputNodes!: HierarchyNode<NodeData>
 
   get nodes() {
-    return this.tree.descendants().filter(n => n.data.name != 'root')
+    return this.tree.descendants().filter(n => n.data.name !== 'root')
   }
 
   get links() {

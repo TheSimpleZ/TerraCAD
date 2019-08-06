@@ -27,8 +27,6 @@ import { remote } from 'electron'
   },
 })
 export default class App extends Vue {
-  drawer = false
-
   get stateTree() {
     return vxm.graph.tree
   }
