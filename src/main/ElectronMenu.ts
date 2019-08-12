@@ -132,7 +132,9 @@ export default class ElectronMenu {
   }
 
   async save() {
-    const fileName = dialog.showSaveDialog(this.win, {})
+    const fileName = dialog.showSaveDialog(this.win, {
+      defaultPath: vxm.graph.openFolder,
+    })
 
     if (fileName) {
       await fsPromises.writeFile(fileName, JSON.stringify(vxm.graph.parsedHcl))
