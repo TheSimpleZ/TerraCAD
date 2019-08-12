@@ -1,42 +1,50 @@
 matrix:
   include:
-    - os: osx
-      osx_image: xcode10.2
-      language: node_js
-      node_js: "12"
-      env:
-        - ELECTRON_CACHE=$HOME/.cache/electron
-        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
-
-    - os: linux
-      services: docker
-      language: generic
-      env:
-        - ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
-
+  - os: osx
+    osx_image: xcode10.2
+    language: node_js
+    node_js: '12'
+    env:
+    - ELECTRON_CACHE=$HOME/.cache/electron
+    - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+  - os: linux
+    services: docker
+    language: generic
+    env:
+    - ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
 cache:
   directories:
   - node_modules
-  - $HOME/.cache/electron
-  - $HOME/.cache/electron-builder
-
+  - "$HOME/.cache/electron"
+  - "$HOME/.cache/electron-builder"
 script:
-  - npm install
-  - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      docker run --rm \
-        --env-file <(env | grep -vE '\r|\n' | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
-        -v ${PWD}:/project \
-        -v ~/.cache/electron:/root/.cache/electron \
-        -v ~/.cache/electron-builder:/root/.cache/electron-builder \
-        electronuserland/builder:wine \
-        /bin/bash -c "/project/node_modules/.bin/vue-cli-service electron:build --windows --linux"
-    else
-      ./node_modules/.bin/vue-cli-service electron:build
-    fi
+- npm install
+- |
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    docker run --rm \
+      --env-file <(env | grep -vE '\r|\n' | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
+      -v ${PWD}:/project \
+      -v ~/.cache/electron:/root/.cache/electron \
+      -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+      electronuserland/builder:wine \
+      /bin/bash -c "/project/node_modules/.bin/vue-cli-service electron:build --windows --linux"
+  else
+    ./node_modules/.bin/vue-cli-service electron:build
+  fi
 before_cache:
-  - rm -rf $HOME/.cache/electron-builder/wine
-
+- rm -rf $HOME/.cache/electron-builder/wine
 branches:
   except:
-    - "/^v\\d+\\.\\d+\\.\\d+$/"
+  - "/^v\\d+\\.\\d+\\.\\d+$/"
+deploy:
+  provider: releases
+  file_glob: true
+  draft: true
+  api_key:
+    secure: PVFCQMbktNZA87S5SnDYraQdRskSbwbecFiLFH/1myx/pagnNaVB+jZtwKIQXQ1NC6BZiBmwtSj3z3ju1EoVKNAItf4jAP8c4oZCzNYmXSlDc6YPVkb7ZrQk7AexO4VHvwsNIws0HSzOu9M1coBMl+y+wC21Tx56V0UVjY4mBU59xcIQ/0GF0GL+Gne/NYpvX+pMrOUaOYFOTEakfJhAeOjyyQR6MWBg5blrfPKKaSpEVKtpE5Qd1iuRdHkV0dZ+/mkEPKPdOeS/VDQH/myUnoKXzBhAsTq+NHYjT2BZGldf+E+869q0GIxTyOnktAq7IFY0xebKH+Uqw6VFJTgBw2+wcy8RxQ/BvMpockC2fJeBz9oEhpEKQh91wwRzddGD0ekmxYR0/vfd+BI8mIqYgTfEB3844Lw+Kcvh7fQ3pc5vIl+l7vBsVx+ppz5OmUmTiZGUtHqggGGM4C1qI23oQ3sPL/PtsoZbvgNpSfr9L1HbxnX87WojnAe69rQBD5wYUy3MJZ0q2fJZjDqDoEYhmN5Lxbg3+mngVjUGFbib07u8FGdhoKq4iPKoJ4oaVrOce0Ebm4HkUyxHYjr4HCiwleF+/xVWV5z3cUKWA9PiqTLKIajy4W7VbZLCyfUFk1gr85bQrzZNRE9tfachExooWvZ5Umed9KScxh1eQruIMYI=
+  file: 
+    - "./dist_electron/*.AppImage"
+    - "./dist_electron/*.snap"
+  on:
+    repo: TheSimpleZ/TerraCAD
+    tags: true
