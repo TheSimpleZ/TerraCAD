@@ -47,4 +47,4 @@ deploy:
     - "./dist_electron/*.snap"
   on:
     repo: TheSimpleZ/TerraCAD
-    tags: true
+#    tags: true
