@@ -38,13 +38,8 @@ branches:
   - "/^v\\d+\\.\\d+\\.\\d+$/"
 deploy:
   provider: releases
-  file_glob: true
-  draft: true
   api_key:
-    secure: PVFCQMbktNZA87S5SnDYraQdRskSbwbecFiLFH/1myx/pagnNaVB+jZtwKIQXQ1NC6BZiBmwtSj3z3ju1EoVKNAItf4jAP8c4oZCzNYmXSlDc6YPVkb7ZrQk7AexO4VHvwsNIws0HSzOu9M1coBMl+y+wC21Tx56V0UVjY4mBU59xcIQ/0GF0GL+Gne/NYpvX+pMrOUaOYFOTEakfJhAeOjyyQR6MWBg5blrfPKKaSpEVKtpE5Qd1iuRdHkV0dZ+/mkEPKPdOeS/VDQH/myUnoKXzBhAsTq+NHYjT2BZGldf+E+869q0GIxTyOnktAq7IFY0xebKH+Uqw6VFJTgBw2+wcy8RxQ/BvMpockC2fJeBz9oEhpEKQh91wwRzddGD0ekmxYR0/vfd+BI8mIqYgTfEB3844Lw+Kcvh7fQ3pc5vIl+l7vBsVx+ppz5OmUmTiZGUtHqggGGM4C1qI23oQ3sPL/PtsoZbvgNpSfr9L1HbxnX87WojnAe69rQBD5wYUy3MJZ0q2fJZjDqDoEYhmN5Lxbg3+mngVjUGFbib07u8FGdhoKq4iPKoJ4oaVrOce0Ebm4HkUyxHYjr4HCiwleF+/xVWV5z3cUKWA9PiqTLKIajy4W7VbZLCyfUFk1gr85bQrzZNRE9tfachExooWvZ5Umed9KScxh1eQruIMYI=
-  file: 
-    - "./dist_electron/*.AppImage"
-    - "./dist_electron/*.snap"
+    secure: NQvPSpLLB3xHEBZK6S1kaKTPT6Q2FxbNXtZ7cb48tMD1fMGHzntuqHKEK0g1m1Z9yjhpghdiYoISLNtJM5oGHWup2mTkv/OIlyG42R4FRRqaPWrqg1BfEol7luU4ilIgaSs55TZk//pB+4SOuLRKkDdokpY5+INdss1duRIfC/9ZxHPn2OXX2y/tPdlec8yiCb9o1I5e4OaW2OEQF8dGe4pbznmqv7e929wwuNqBX0r7iwlU0UymBq7ExFuvvIQ9L0jxwj1Xt/XkeLVmlw2SlXQyWfAp+W0EbkjeOB6s6TgXV4gImCgHfqU7zZZ4+ZiWyGwkp7WbU8xPRpYHOGr07XHvQSJV5VXGodASW7G7VRPwa/+yoHFFke/N3fq88B8fnGaH0WTcIZDNE3o/m5/xlxJtU5AM+ppXwqVFhuytnxngoIMWosCQtuv1feu3X3Dp5+6cS5KSIgBqIR/9wyDJIYrSBYg5xBDubUfoAv+zDRwM8Dp3uxJWYbbl+OkmqYq2p+xQwAqfKsLhVH6/9wL7A3BJRVxTPKYUMJAZdGRt8AHCUxEfomD0q/4PX2nrMONCjmdlS1RfK1Js/zasqvDj+VGvJpqR6H8+v1x3WAGW3q+dWE+5d92o6LF69CJcZj06Hw2fv3i/zzC0ddCDovewUNvuVfAPg3ElVEH89ko8M/I=
+  file: "./dist_electron/*.AppImage"
   on:
     repo: TheSimpleZ/TerraCAD
-#    tags: true
