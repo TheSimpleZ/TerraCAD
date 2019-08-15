@@ -1,7 +1,7 @@
 {
   "name": "TerraCAD",
   "description": "Terraform project vizualizer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "author": "Zrean Tofiq <mote93@gmail.com>",
   "license": "MPL",
