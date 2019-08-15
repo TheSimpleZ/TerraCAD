@@ -15,7 +15,6 @@
   ],
   "scripts": {
     "lint": "vue-cli-service lint",
-    "dist": "npm run electron:generate-icons && npm run build -- --windows --linux",
     "build": "vue-cli-service electron:build",
     "start": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",

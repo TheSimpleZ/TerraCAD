@@ -19,6 +19,7 @@ cache:
   - "$HOME/.cache/electron-builder"
 script:
 - npm install
+- npm run electron:generate-icons
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     docker run --rm \
@@ -27,9 +28,9 @@ script:
       -v ~/.cache/electron:/root/.cache/electron \
       -v ~/.cache/electron-builder:/root/.cache/electron-builder \
       electronuserland/builder:wine \
-      /bin/bash -c "/project/node_modules/.bin/vue-cli-service electron:build --windows --linux"
+      /bin/bash -c "npm run build -- --windows --linux"
   else
-    ./node_modules/.bin/vue-cli-service electron:build
+    npm run build
   fi
 before_cache:
 - rm -rf $HOME/.cache/electron-builder/wine
@@ -40,6 +41,10 @@ deploy:
   provider: releases
   api_key:
     secure: NQvPSpLLB3xHEBZK6S1kaKTPT6Q2FxbNXtZ7cb48tMD1fMGHzntuqHKEK0g1m1Z9yjhpghdiYoISLNtJM5oGHWup2mTkv/OIlyG42R4FRRqaPWrqg1BfEol7luU4ilIgaSs55TZk//pB+4SOuLRKkDdokpY5+INdss1duRIfC/9ZxHPn2OXX2y/tPdlec8yiCb9o1I5e4OaW2OEQF8dGe4pbznmqv7e929wwuNqBX0r7iwlU0UymBq7ExFuvvIQ9L0jxwj1Xt/XkeLVmlw2SlXQyWfAp+W0EbkjeOB6s6TgXV4gImCgHfqU7zZZ4+ZiWyGwkp7WbU8xPRpYHOGr07XHvQSJV5VXGodASW7G7VRPwa/+yoHFFke/N3fq88B8fnGaH0WTcIZDNE3o/m5/xlxJtU5AM+ppXwqVFhuytnxngoIMWosCQtuv1feu3X3Dp5+6cS5KSIgBqIR/9wyDJIYrSBYg5xBDubUfoAv+zDRwM8Dp3uxJWYbbl+OkmqYq2p+xQwAqfKsLhVH6/9wL7A3BJRVxTPKYUMJAZdGRt8AHCUxEfomD0q/4PX2nrMONCjmdlS1RfK1Js/zasqvDj+VGvJpqR6H8+v1x3WAGW3q+dWE+5d92o6LF69CJcZj06Hw2fv3i/zzC0ddCDovewUNvuVfAPg3ElVEH89ko8M/I=
-  file: "./dist_electron/*.AppImage"
+  file: 
+    - "./dist_electron/*.AppImage"
+    - "./dist_electron/*.snap"
+    - "./dist_electron/*.exe"
   on:
     repo: TheSimpleZ/TerraCAD
+    tags: true
