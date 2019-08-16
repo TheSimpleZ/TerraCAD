@@ -12,12 +12,13 @@ matrix:
     language: generic
     env:
     - ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
-    - DEBUG=electron-builder
 cache:
   directories:
   - node_modules
   - "$HOME/.cache/electron"
   - "$HOME/.cache/electron-builder"
+before_install:
+  - npm i -g npm
 script:
 - npm install
 - npm run electron:generate-icons
@@ -29,7 +30,7 @@ script:
       -v ~/.cache/electron:/root/.cache/electron \
       -v ~/.cache/electron-builder:/root/.cache/electron-builder \
       electronuserland/builder:wine \
-      /bin/bash -c "npm run build -- --windows --linux"
+      /bin/bash -c "DEBUG=electron-builder npm run build -- --windows --linux"
   else
     npm run build
   fi
