@@ -51,7 +51,7 @@ deploy:
     - "**/dist_electron/*.AppImage"
     - "**/dist_electron/*.snap"
     - "**/dist_electron/*.exe"
-    - "**/dist_electron/*.dmgs"
+    - "**/dist_electron/*.dmg"
   on:
     repo: TheSimpleZ/TerraCAD
     tags: true
