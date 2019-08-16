@@ -12,6 +12,7 @@ matrix:
     language: generic
     env:
     - ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
+    - DEBUG=electron-builder
 cache:
   directories:
   - node_modules
