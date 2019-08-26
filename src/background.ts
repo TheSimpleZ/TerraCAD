@@ -9,7 +9,7 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 import './plugins/vuex'
 import './store'
-import ElectronMenu from './main/ElectronMenu'
+import ElectronMenu from './background/ElectronMenu'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 

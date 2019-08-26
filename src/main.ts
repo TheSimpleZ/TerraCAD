@@ -5,7 +5,7 @@ import './plugins/vuetify'
 import './plugins/vuex'
 import './plugins/highlighterjs'
 import 'reflect-metadata'
-import App from './renderer/App.vue'
+import App from './App.vue'
 
 Vue.config.productionTip = false
 Vue.config.devtools = process.env.NODE_ENV === 'development'

@@ -36,8 +36,8 @@ import * as d3force from 'd3-force'
 import * as d3transition from 'd3-transition'
 import * as d3tree from 'd3-hierarchy'
 
-import { vxm } from '../../store'
-import { Hcl, NodeData, nodeDataFactory } from '../../store/graph'
+import { vxm } from '../store'
+import { Hcl, NodeData, nodeDataFactory } from '../store/graph'
 import { HierarchyLink, HierarchyNode } from 'd3-hierarchy'
 import PropCard from './TerraGraphPropCard.vue'
 const getD3Event = () => d3select.event

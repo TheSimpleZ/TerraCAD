@@ -18,10 +18,10 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch, Ref } from 'vue-property-decorator'
 
-import { vxm } from '../../store'
-import '../../../node_modules/highlight.js/styles/an-old-hope.css'
+import { vxm } from '../store'
+import '../../node_modules/highlight.js/styles/an-old-hope.css'
 import { HierarchyNode } from 'd3-hierarchy'
-import { NodeData } from '../../store/graph'
+import { NodeData } from '../store/graph'
 
 @Component({
   name: 'PropCard',
