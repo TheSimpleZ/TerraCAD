@@ -1,10 +1,13 @@
 import { app, BrowserWindow, dialog, Menu, shell } from 'electron'
 import { vxm } from '../store'
 import { promises as fsPromises } from 'fs'
+import createWindow from './utils'
 
 export default class ElectronMenu {
   win: BrowserWindow
   isMac = process.platform === 'darwin'
+
+  preferences: BrowserWindow | null = null
 
   template: object[] = [
     // { role: 'appMenu' }
@@ -48,29 +51,35 @@ export default class ElectronMenu {
       ],
     },
     // { role: 'editMenu' }
-    // {
-    //   label: 'Edit',
-    //   submenu: [
-    //     { role: 'undo' },
-    //     { role: 'redo' },
-    //     { type: 'separator' },
-    //     { role: 'cut' },
-    //     { role: 'copy' },
-    //     { role: 'paste' },
-    //     ...(this.isMac
-    //       ? [
-    //           { role: 'pasteAndMatchStyle' },
-    //           { role: 'delete' },
-    //           { role: 'selectAll' },
-    //           { type: 'separator' },
-    //           {
-    //             label: 'Speech',
-    //             submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
-    //           },
-    //         ]
-    //       : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
-    //   ],
-    // },
+    {
+      label: 'Edit',
+      submenu: [
+        {
+          label: 'Preferences',
+          click: () => {
+            createWindow(this.preferences, 'preferences', 'preferences.html')
+          }
+        },
+        // { role: 'undo' },
+        // { role: 'redo' },
+        // { type: 'separator' },
+        // { role: 'cut' },
+        // { role: 'copy' },
+        // { role: 'paste' },
+        // ...(this.isMac
+        //   ? [
+        //       { role: 'pasteAndMatchStyle' },
+        //       { role: 'delete' },
+        //       { role: 'selectAll' },
+        //       { type: 'separator' },
+        //       {
+        //         label: 'Speech',
+        //         submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
+        //       },
+        //     ]
+        //   : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+      ],
+    },
     // { role: 'viewMenu' }
     {
       label: 'View',
@@ -118,9 +127,10 @@ export default class ElectronMenu {
   constructor(win: BrowserWindow) {
     this.win = win
     const menu = Menu.buildFromTemplate(this.template)
-    Menu.setApplicationMenu(menu)
-  }
+    // Menu.setApplicationMenu(menu)
 
+    win.setMenu(menu)
+  }
   openFolder() {
     const folderName = dialog.showOpenDialog(this.win, {
       properties: ['openDirectory'],
