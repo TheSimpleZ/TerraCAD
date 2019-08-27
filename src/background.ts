@@ -30,7 +30,7 @@ function createWindow(
   prodPath: string,
 ) {
   // Create the browser window.
-  winVar = new BrowserWindow({ width: 800, height: 600 })
+  winVar = new BrowserWindow({ width: 800, height: 600, icon: path.join(__static, 'icon.png') })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
