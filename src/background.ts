@@ -30,7 +30,14 @@ function createWindow(
   prodPath: string,
 ) {
   // Create the browser window.
-  winVar = new BrowserWindow({ width: 800, height: 600, icon: path.join(__static, 'icon.png') })
+  winVar = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true,
+    },
+    icon: path.join(__static, 'icon.png'),
+  })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -68,9 +75,9 @@ app.on('activate', () => {
     createWindow(win, '', 'index.html')
   }
 
-  // if (secondWin === null) {
-  //   createWindow(secondWin, 'preferences', 'preferences.html')
-  // }
+  if (secondWin === null) {
+    createWindow(secondWin, 'preferences', 'preferences.html')
+  }
 })
 
 // This method will be called when Electron has finished
@@ -86,7 +93,7 @@ app.on('ready', async () => {
     }
   }
   createWindow(win, '', 'index.html')
-  // createWindow(secondWin, 'preferences', 'preferences.html')
+  createWindow(secondWin, 'preferences', 'preferences.html')
 })
 
 // Exit cleanly on request from parent process in development mode.
