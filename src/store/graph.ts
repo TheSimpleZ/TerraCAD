@@ -3,7 +3,13 @@ import { promises as fsPromises } from 'fs'
 import hcl from 'gopher-hcl'
 import merge from 'lodash.merge'
 import * as path from 'path'
-import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules'
+import {
+  Action,
+  Module,
+  Mutation,
+  VuexModule,
+  RegisterOptions,
+} from 'vuex-class-modules'
 import * as d3tree from 'd3-hierarchy'
 
 export interface Hcl {
@@ -30,6 +36,22 @@ export class TerraGraphStore extends VuexModule {
 
   tree: d3tree.HierarchyNode<NodeData> = d3tree.hierarchy(nodeDataFactory())
   selectedNode: d3tree.HierarchyNode<NodeData> | null = null
+
+  constructor(
+    initialState: {
+      // parsedHcl: Hcl
+      // openFolder: string
+      // tree: d3tree.HierarchyNode<NodeData>
+      // selectedNode: d3tree.HierarchyNode<NodeData> | null
+    },
+    options: RegisterOptions,
+  ) {
+    super(options)
+    // this.parsedHcl = initialState.parsedHcl
+    // this.openFolder = initialState.openFolder
+    // this.tree = initialState.tree
+    // this.selectedNode = initialState.selectedNode
+  }
 
   @Mutation
   setTree(nodes: NodeData) {

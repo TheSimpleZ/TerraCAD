@@ -39,6 +39,8 @@
     "d3-selection": "^1.4.0",
     "d3-transition": "^1.2.0",
     "d3-zoom": "^1.7.3",
+    "electron-store": "^4.0.0",
+    "flatted": "^2.0.1",
     "gopher-hcl": "^0.1.0",
     "lodash.merge": "^4.6.2",
     "reflect-metadata": "^0.1.13",
