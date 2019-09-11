@@ -34,8 +34,13 @@ export class TerraGraphStore extends VuexModule {
   parsedHcl: Hcl = {}
   openFolder?: string = ''
 
-  tree: d3tree.HierarchyNode<NodeData> = d3tree.hierarchy(nodeDataFactory())
-  selectedNode: d3tree.HierarchyNode<NodeData> | null = null
+  treeData: NodeData = nodeDataFactory()
+
+  selectedNode: NodeData | null = null
+
+  get getTree() {
+    return this.treeData
+  }
 
   constructor(
     initialState: {
@@ -54,14 +59,18 @@ export class TerraGraphStore extends VuexModule {
   }
 
   @Mutation
-  setTree(nodes: NodeData) {
-    this.tree = d3tree.hierarchy(nodes)
+  setTreeData(nodes: NodeData) {
+    this.treeData = nodes
   }
 
   @Action
   async selectNode(node: d3tree.HierarchyNode<NodeData>) {
-    this.selectedNode =
-      this.tree.descendants().find(n => n.data === node.data) || null
+    const found = d3tree
+      .hierarchy(this.treeData)
+      .descendants()
+      .find(n => n.data === node.data)
+
+    this.selectedNode = (found && found.data) || null
   }
 
   @Action
@@ -77,7 +86,8 @@ export class TerraGraphStore extends VuexModule {
     )
     this.parsedHcl = fileDatas.reduce(merge, {})
     this.openFolder = dirPath.split('/').pop()
-    this.setTree(this.generateTree(this.parsedHcl))
+    const data = this.generateTree(this.parsedHcl)
+    this.setTreeData(data)
   }
 
   private generateTree(hclData: Hcl) {

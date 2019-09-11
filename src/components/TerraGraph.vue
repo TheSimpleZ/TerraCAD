@@ -56,7 +56,11 @@ interface SimulationHierarchyNode
 // Renders and simulates nodes on a svg
 export default class TerraGraph extends Vue {
   // Nodes that should be rendered
-  @Prop({ required: true }) inputNodes!: HierarchyNode<NodeData>
+  @Prop({ required: true }) inputNodes!: NodeData
+
+  get stateTree() {
+    return d3tree.hierarchy(vxm.graph.getTree)
+  }
 
   get nodes() {
     return this.tree.descendants().filter(n => n.data.name !== 'root')
@@ -73,9 +77,7 @@ export default class TerraGraph extends Vue {
   get selectedNode() {
     return this.tree
       .descendants()
-      .find(
-        n => !!vxm.graph.selectedNode && n.data === vxm.graph.selectedNode.data,
-      )
+      .find(n => !!vxm.graph.selectedNode && n.data === vxm.graph.selectedNode)
   }
 
   set selectedNode(value) {
@@ -135,7 +137,7 @@ export default class TerraGraph extends Vue {
     )
   }
 
-  @Watch('inputNodes')
+  @Watch('stateTree')
   buildTree(newTree: HierarchyNode<NodeData>) {
     const tree: SimulationHierarchyNode = newTree.copy()
     if (tree.children) {

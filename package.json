@@ -1,5 +1,5 @@
 {
-  "name": "TerraCAD",
+  "name": "terracad",
   "description": "Terraform project vizualizer",
   "version": "0.0.2",
   "private": true,
@@ -42,7 +42,7 @@
     "electron-store": "^4.0.0",
     "flatted": "^2.0.1",
     "gopher-hcl": "^0.1.0",
-    "lodash.merge": "^4.6.2",
+    "lodash": "^4.17.15",
     "reflect-metadata": "^0.1.13",
     "uuid": "^3.3.2",
     "vue": "^2.6.10",

@@ -28,14 +28,14 @@ import { remote } from 'electron'
 })
 export default class App extends Vue {
   get stateTree() {
-    return vxm.graph.tree
+    return vxm.graph.getTree
   }
 
-  async mounted() {
-    await vxm.graph.importTerraformFolder(
-      remote.app.getPath('home') + '/Documents/TerraCAD/infra',
-    )
-  }
+  // async mounted() {
+  //   await vxm.graph.importTerraformFolder(
+  //     remote.app.getPath('home') + '/Documents/TerraCAD/infra',
+  //   )
+  // }
 }
 </script>
 
